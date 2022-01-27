@@ -1,0 +1,190 @@
+-- Progetto d'esame Linguaggi di programmazione e verifica del software
+-- TruDaMul: a Trusted Framework for Smart Territories based on Untrusted Data Mules
+
+------------------------------------------------
+MODULE main
+
+VAR
+
+c  : client(m1, m2, m3);
+m1 : mule(1, c, p, 2, -2);
+m2 : mule(2, c, p, 5, -1);
+m3 : mule(3, c, p, 1, -5);
+p  : proxy(m1, m2, m3, s);
+s  : server(p);
+
+---------- Proprietà da verificare -------------
+
+------------------------------------------------
+
+MODULE client(m1, m2, m3)
+
+VAR
+
+-- stato null              : non ho nessun messaggio da inviare.
+-- stato request           : mi metto in attesa di un mulo per inviare un messaggio.
+-- stato_according_to_mule : mi sto organizzando con il mulo per consegnargli il messaggio.
+-- stato waiting           : messaggio consegnato al mulo, mi metto in attesa della risposta.
+-- stato responce_received : il mulo mi ha appena consegnato la risposta.
+-- stato payment           : pago il mulo per il suo servizio.
+
+state   : {null, request, according_to_mule, waiting, responce_received, payment};
+-- variabile che contiene l'id del mulo a cui è stato affidato il lavoro. 
+-- se il suo valore è 0, il lavoro non è stato affidato ancora a nessuno.
+my_mule : {0, 1, 2, 3};
+-- variabile che indica se il client ha pagato il mulo oppure no.
+payed   : {null, yes, no};
+
+ASSIGN
+
+init(state) := null;
+next(state) :=
+    case
+        (state = null) : {null, request);
+        (state = request) & ((m1.state = walking & m1.my_position = client) | (m2.state = walking & m2.my_position = client) |
+        (m3.state = walking & m3.my_position = client))   : according_to_mule;
+        (state = according_to_mule)                       : waiting;
+        (state = waiting) & (p.state = messagge_received) : payment;
+        (state = payment) & (p.state = waiting)           : waiting;
+        (state = waiting) & ((m1.state = going_to_client) | (m1.state = going_to_client | (m1.state = going_to_client)
+        TRUE : state;
+    esac;
+
+
+------------------------------------------------
+-- PARAMETRI DEL MULO
+-- inc : incremento della fiducia quando il mulo viene pagato.
+-- dec : decremento della fiducia quando il mulo non viene pagato.
+
+MODULE mule(id, c, p, inc, dec)
+
+VAR
+
+-- stato walking            : sto camminando in modo casuale, non mi è stato assegnato nessun compito.
+-- stato talking_to_client  : il client mi sta consegnando un messaggio. 
+-- stato talking_to_proxy   : il proxy mi sta consegnando una risposta.
+-- stato going_to_proxy     : sono in viaggio per consegnare il messaggio al proxy.
+-- stato going_to_client    : sono in viaggio per consegnare la risposta al client.
+-- stato deliver            : sto consegnando il messaggio al proxy o la risposta al client.
+-- stato waiting_for_reward : sto aspettando di essere pagato.
+
+state         : {walking, talking_to_client, talking_to_proxy, going_to_proxy, going_to_client, deliver, waiting_for_reward};
+
+-- range in cui si trova il mulo.
+my_position   : {client, proxy, middle};
+
+-- variabile che indica il livello di fiducia del mulo nei confronti del client.
+-- se 1 la fiducia è molto bassa, se 10 è molto alta.
+trust         : 1...10
+-- variabile che indica se il lavoro proposto al mulo è stato accettato o rifiutato.
+-- è null se non gli è stato proposto nessun lavoro.
+work_accepted : {null, yes ,no}
+
+-- variabile che aiuta il mulo a decidere se accettare o meno l'offerta del cliente
+decision      : 0...9;
+
+-- variabile che dice se sono stato pagato oppure no
+get_payed     : {null, yes, no}
+
+ASSIGN
+
+init(state) := walking;
+next(state) :=
+    case
+        (state = walking) & (my_position = client) & (c.state = request)          : talking_to_client;
+        (state = walking) & (my_position = proxy)  & (p.state = waiting_for_mule) : talking_to_proxy;
+        (state = talking_to_client)                                               : going_to_proxy;
+        (state = talking_to_proxy)                                                : going_to_client;
+        (state = going_to_proxy)  & (my_position = client)                        : going_to_proxy;
+        (state = going_to_proxy)  & (my_position = middle)                        : going_to_proxy;
+        (state = going_to_client) & (my_position = proxy)                         : going_to_client;
+        (state = going_to_client) & (my_position = middle)                        : going_to_proxy;
+        (state = going_to_proxy)  & (my_position = proxy)                         : deliver;
+        (state = deliver)                                                         : waiting_for_reward;
+        (state = waiting_for_reward)                                              : walking;
+        TRUE : state;
+    esac;
+
+init(my_position) := {client, proxy, middle};
+next(my_position) :=
+    case
+        -- quando il mulo non sta lavorando, simulo una passeggiata casuale.
+        (state = walking) & (my_position = client) & (c.state !=request)           : client;
+        (state = walking) & (my_position = middle)                                 : {client, middle, proxy};
+        (state = walking) & (my_position = proxy)  & (p.state != waiting_for_mule) : middle;
+        -- sto andando dal proxy per consegnare un messaggio.
+        (state = going_to_proxy)  & (my_position = client)  : middle;
+        (state = going_to_proxy)  & (my_position = middle)  : proxy;
+        -- sto andando dal client per consegnare una risposta
+        (state = going_to_client) & (my_position = proxy)   : middle;
+        (state = going_to_client) & (my_position = middle)  : client;
+        TRUE : my_range;
+    esac;
+
+init(trust) := 5;
+next(trust) :=
+    case
+        TRUE : trust;
+    esac;
+
+-- il valore di decision cambia ad ogni transazione in maniera non deterministica.
+next(decision) := 
+    case
+        TRUE   : {1,2,3,4,5,6,7,8,9};
+    esac;
+
+init(get_payed) := null;
+next(get_payed) :=
+    case
+        TRUE : get_payed;
+    esac;
+------------------------------------------------
+
+
+MODULE proxy(m1, m2, m3, s)
+
+VAR
+
+-- stato null              : sono sospeso.
+-- stato messagge_received : il mulo mi ha appena consegnato un messaggio.
+-- stato forward           : sto inoltrando il messaggio al server.
+-- stato waiting           : sto aspettando che il server mi consegni la risposta.
+-- stato responce_received : il server mi ha appena consegnato una risposta.
+-- stato waiting_for_mule  : mi metto in attesa del mulo per affidargli la risposta.
+-- stato_according_to_mule : mi sto organizzando con il mulo per consegnargli la risposta.
+
+state : {null, message_received, forward, waiting, responce_received, waiting_for_mule, according_to_mule};
+-- variabile che contiene l'id del mulo a cui è stato affidato il lavoro. 
+-- se il suo valore è 0, il lavoro non è stato affidato ancora a nessuno.
+my_mule : {0, 1, 2, 3};
+
+ASSIGN
+
+init(state) := null;
+next(state) :=
+    case
+
+    esac;
+
+------------------------------------------------
+
+
+MODULE server(p)
+
+VAR
+
+-- stato null            : sono sospeso.
+-- stato making_responce : sto preparando la risposta.
+-- stato forward         : inoltro la risposta al proxy.
+
+state : {null, making_responce, forward};
+
+ASSIGN
+
+init(state) := null;
+next(state) :=
+    case
+
+    esac;
+
+
