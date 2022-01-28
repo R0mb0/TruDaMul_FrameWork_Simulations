@@ -71,14 +71,34 @@ ASSIGN
 init(state) := walking;
 next(state) :=
     case
-        -----------
+        (state = walking) & (myPosition = client) & (c.state = request)     : talkingToC;
+        (state = walking) & (myPosition = proxy)  & (p.state = waitingMule) : talkinkToP;
+        (state = talkingToC) : goingToP;
+        (state = talkingToP) : goingToC;
+        (state = goingToP) & (myPosition = client) : goingToP;
+        (state = goingToP) & (myPosition = middle) : goingToP;
+        (state = goingToP) & (myPosition = proxy)  : deliver;
+        (state = goingToC) & (myPosition = proxy)  : goingToP;
+        (state = goingToC) & (myPosition = middle) : goingToP;
+        (state = goingToC) & (myPosition = client) : deliver;
+        (state = deliver) : wait;
+        (state = wait)    : walking;
         TRUE : state;
     esac;
 
 init(myPosition) := {client, proxy, middle};
 next(myPosition) :=
     case
-        ------
+        -- quando non lavoro, eseguo passeggiate casuali.
+        (state = walking)  & (myPosition = client) : {client, proxy};
+        (state = walking)  & (myPosition = middle) : {client, middle, proxy};
+        (state = walking)  & (myPosition = proxy)  : {proxy, middle};
+        -- sto andando dal proxy.
+        (state = goingToP) & (myPosition = client) : middle;
+        (state = goingToP) & (myPosition = middle) : proxy;
+        -- sto andando dal client.
+        (state = goingToC) & (myPosition = proxy)  : middle;
+        (state = goingToC) & (myPosition = middle) : client;
         TRUE : myPosition;
     esac;
 
