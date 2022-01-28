@@ -20,16 +20,16 @@ MODULE client(m1, m2)
 
 VAR
 
--- stato null              : non ho nessun messaggio da inviare.
--- stato request           : mi metto in attesa di un mulo per inviare un messaggio.
--- stato_according_to_mule : mi sto organizzando con il mulo per consegnargli il messaggio.
--- stato waiting           : messaggio consegnato al mulo, mi metto in attesa della risposta.
--- stato responce_received : il mulo mi ha appena consegnato la risposta.
--- stato payment           : pago il mulo per il suo servizio.
+-- stato null       : non ho nessun messaggio da inviare.
+-- stato request    : mi metto in attesa di un mulo per inviare un messaggio.
+-- stato according  : mi sto organizzando con il mulo per consegnargli il messaggio.
+-- stato waiting    : messaggio consegnato al mulo, mi metto in attesa della risposta.
+-- stato responce   : il mulo mi ha appena consegnato la risposta.
+-- stato payment    : pago il mulo per il suo servizio.
 
-state   : {null, request, according_to_mule, waiting, responce_received, payment};
+state  : {null, request, according, waiting, responce, payment};
 
-wallet  : 0...50;  
+wallet : 0...50;  
 
 ASSIGN
 
@@ -52,18 +52,18 @@ MODULE mule(id, c, p)
 
 VAR
 
--- stato walking            : sto camminando in modo casuale, non mi è stato assegnato nessun compito.
--- stato talking_to_client  : il client mi sta consegnando un messaggio. 
--- stato talking_to_proxy   : il proxy mi sta consegnando una risposta.
--- stato going_to_proxy     : sono in viaggio per consegnare il messaggio al proxy.
--- stato going_to_client    : sono in viaggio per consegnare la risposta al client.
--- stato deliver            : sto consegnando il messaggio al proxy o la risposta al client.
--- stato waiting_for_reward : sto aspettando di essere pagato.
+-- stato walking     : sto camminando in modo casuale, non mi è stato assegnato nessun compito.
+-- stato talkingToC  : il client mi sta consegnando un messaggio. 
+-- stato talkingToP  : il proxy mi sta consegnando una risposta.
+-- stato goingToP    : sono in viaggio per consegnare il messaggio al proxy.
+-- stato goingToC    : sono in viaggio per consegnare la risposta al client.
+-- stato deliver     : sto consegnando il messaggio al proxy o la risposta al client.
+-- stato wait        : sto aspettando di essere pagato.
 
-state         : {walking, talking_to_client, talking_to_proxy, going_to_proxy, going_to_client, deliver, waiting_for_reward};
+state      : {walking, talkingToC, talkingToP, goingToP, goingToC, deliver, wait};
 
 -- range in cui si trova il mulo.
-my_position   : {client, proxy, middle};
+myPosition : {client, proxy, middle};
 
 
 ASSIGN
@@ -75,11 +75,11 @@ next(state) :=
         TRUE : state;
     esac;
 
-init(my_position) := {client, proxy, middle};
-next(my_position) :=
+init(myPosition) := {client, proxy, middle};
+next(myPosition) :=
     case
-        -----------
-        TRUE : my_range;
+        ------
+        TRUE : myPosition;
     esac;
 
 ------------------------------------------------
@@ -88,15 +88,15 @@ MODULE proxy(m1, m2, s)
 
 VAR
 
--- stato null              : sono sospeso.
--- stato messagge_received : il mulo mi ha appena consegnato un messaggio.
--- stato forward           : sto inoltrando il messaggio al server.
--- stato waiting           : sto aspettando che il server mi consegni la risposta.
--- stato responce_received : il server mi ha appena consegnato una risposta.
--- stato waiting_for_mule  : mi metto in attesa del mulo per affidargli la risposta.
--- stato_according_to_mule : mi sto organizzando con il mulo per consegnargli la risposta.
+-- stato null        : sono sospeso.
+-- stato messagge    : il mulo mi ha appena consegnato un messaggio.
+-- stato forward     : sto inoltrando il messaggio al server.
+-- stato wait        : sto aspettando che il server mi consegni la risposta.
+-- stato responce    : il server mi ha appena consegnato una risposta.
+-- stato waitingMule : mi metto in attesa del mulo per affidargli la risposta.
+-- stato according   : mi sto organizzando con il mulo per consegnargli la risposta.
 
-state : {null, message_received, forward, waiting, responce_received, waiting_for_mule, according_to_mule};
+state : {null, message, forward, wait, responce, waitingMule, according};
 
 ASSIGN
 
@@ -113,12 +113,12 @@ MODULE server(p)
 
 VAR
 
--- stato null              : sono sospeso.
--- stato messagge_received : il proxy mi ha appena consegnato il messaggio.
--- stato making_responce   : sto preparando la risposta.
--- stato forward           : inoltro la risposta al proxy.
+-- stato null     : sono sospeso.
+-- stato messagge : il proxy mi ha appena consegnato il messaggio.
+-- stato make     : sto preparando la risposta.
+-- stato forward  : inoltro la risposta al proxy.
 
-state : {null, messagge_received, making_responce, forward};
+state : {null, messagge, make , forward};
 
 ASSIGN
 
