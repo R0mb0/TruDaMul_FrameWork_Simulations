@@ -12,7 +12,7 @@ m2 : mule(2, c, p);
 p  : proxy(m1, m2, s);
 s  : server(p);
 
----------- Proprietà da verificare -------------
+---------- properties to check -----------------
 
 ------------------------------------------------
 
@@ -20,31 +20,71 @@ MODULE client(m1, m2)
 
 VAR
 
--- stato null       : non ho nessun messaggio da inviare.
--- stato request    : mi metto in attesa di un mulo per inviare un messaggio.
--- stato according  : mi sto organizzando con il mulo per consegnargli il messaggio.
--- stato waiting    : messaggio consegnato al mulo, mi metto in attesa della risposta.
--- stato responce   : il mulo mi ha appena consegnato la risposta.
--- stato payment    : pago il mulo per il suo servizio.
+-- state null       : I have no message to send.
+-- state request    : I'm waiting for a mule to send a message. 
+-- state according  : I'm arranging with the mule to deliver the message.
+-- state waiting    : Message delivered to the mule, I wait for the answer. 
+-- state responce   : The mule just handed me the answer. 
+-- state payment    : I pay the mule for his service. 
 
+-- States that rappresent the client life cycle.
 state  : {null, request, according, waiting, responce, payment};
 
+-- Variable that rappresent the wallet of the client (initialized with n tokens).
 wallet : 0...50;  
+
+-- Variable that contains the id of the mule who has been given the job  
+choise : {null, 0, 1};
 
 ASSIGN
 
 init(state)  := null;
 next(state)  :=
     case
-        ------------
+        -- The client can have a message to send or not.
+        state = null : {null, request};
+        -- At least one mule is in the client's zone.
+        (state = request) & (m1.myPosition = client | m2.myPosition = client) : according;
+        state = according : waiting;
+        -- The client received the responce from the server.
+        (state = waiting) & (m1.state = goingToC & m1.myPosition = client) : responce; 
+        (state = waiting) & (m2.state = goingToC & m2.myPosition = client) : responce;
+        -- Message sent to proxy.
+        (state = waiting ) & ((m1.state = deliverToP) | (m2.state = deliverToP)) : payment;  
+        state  = responce : payment; 
+        (state = payment) : waiting;
+        -- I paid the mule for delivering the message.
+        (state = payment) & (m1.state = wait & m1.myPosition = proxy) : waiting;   
+        (state = payment) & (m2.state = wait & m2.myPosition = proxy) : waiting;  
+        -- I paid the mule for delivering the ansewer
+        (state = payment) & (m1.state = wait & m2.myPosition = client) : null;
+        (state = payment) & (m1.state = wait & m2.myPosition = client) : null;
         TRUE : state;
     esac;
 
 init(wallet) := 50;
 next(wallet) :=
     case
-        ------------
+        -- I give 1 token to the mule who has done the job.
+        (wallet > 0) & (state  = payment) : wallet - 1;
+        wallet = 0 : 0;
         TRUE : wallet;
+    esac;
+
+init(choise) := null;
+next(choise) :=
+    case
+        -- client has to send a message but both mules aren't in his zone.
+        (state = request) & (m1.myPosition != client) & (m2.myPosition != client) : null;
+        -- client has to send a messagge and only m1 is in his position.
+        (state = request) & (m1.myPosition  = client) & (m2.myPosition != client) : 1;
+        -- client has to send a messagge and only m2 is in his position.
+        (state = request) & (m1.myPosition != client) & (m2.myPosition  = client) : 2;
+        -- client has to send a message and both mules are in his zone. The choice is non-deterministic. 
+        (state = request) & (m1.myPosition  = client) & (m2.myPosition  = client) : {1,2};
+        -- the job is done. 
+        (state = payment) : null;
+        TRUE : choise;
     esac;
 ------------------------------------------------
 
@@ -52,80 +92,130 @@ MODULE mule(id, c, p)
 
 VAR
 
--- stato walking     : sto camminando in modo casuale, non mi è stato assegnato nessun compito.
--- stato talkingToC  : il client mi sta consegnando un messaggio. 
--- stato talkingToP  : il proxy mi sta consegnando una risposta.
--- stato goingToP    : sono in viaggio per consegnare il messaggio al proxy.
--- stato goingToC    : sono in viaggio per consegnare la risposta al client.
--- stato deliver     : sto consegnando il messaggio al proxy o la risposta al client.
--- stato wait        : sto aspettando di essere pagato.
+-- state walking     : I'm walking randomly, i don't have any task to do. 
+-- state talkingToC  : I'm arranging with the client. 
+-- state talkingToP  : I'm arranging with the proxy.
+-- state goingToP    : I'm travelling to deliver the message to proxy.
+-- state goingToC    : I'm travelling to deliver the responce to client.
+-- state deliverToP  : I'm delivering the message to proxy.
+-- state deliverToC  : I'm delivering the responce to client.
+-- state wait        : I'm waiting to get paid.
 
-state      : {walking, talkingToC, talkingToP, goingToP, goingToC, deliver, wait};
+-- States that rappresent the client life cycle.
+state      : {walking, talkingToC, talkingToP, goingToP, goingToC, deliverToC, deliverToP, wait};
 
--- range in cui si trova il mulo.
+-- Position of where the mule is.
 myPosition : {client, proxy, middle};
 
+-- Variable that rappresent the wallet of the mule (initialized with 0 tokens).
+wallet : 0...50;
 
 ASSIGN
 
 init(state) := walking;
 next(state) :=
     case
+        -- The client has a message to send.
         (state = walking) & (myPosition = client) & (c.state = request)     : talkingToC;
+        -- The proxy has a responce to send.
         (state = walking) & (myPosition = proxy)  & (p.state = waitingMule) : talkinkToP;
-        (state = talkingToC) : goingToP;
-        (state = talkingToP) : goingToC;
+        -- The job is assigned to me or not 
+        (state = talkingToC) & (c.choise  = id)  : goingToP;
+        (state = talkingToC) & (c.choise != id)  : walking;
+        (state = talkingToP) & (p.choise  = id)  : goingToC;
+        (state = talkingToP) & (p.choise != id)  : walking;
+        -- I am going to proxy.
         (state = goingToP) & (myPosition = client) : goingToP;
         (state = goingToP) & (myPosition = middle) : goingToP;
-        (state = goingToP) & (myPosition = proxy)  : deliver;
+        (state = goingToP) & (myPosition = proxy)  : deliverToP;
+        -- I am going to client.
         (state = goingToC) & (myPosition = proxy)  : goingToP;
         (state = goingToC) & (myPosition = middle) : goingToP;
-        (state = goingToC) & (myPosition = client) : deliver;
-        (state = deliver) : wait;
+        (state = goingToC) & (myPosition = client) : deliverToC;
+        -- After the deliver, I wait to get paid
+        (state = deliverToP) | (state = deliverToC) : wait;
+        -- My job is terminated.
         (state = wait)    : walking;
         TRUE : state;
     esac;
 
+-- At the beginning the position of the mule is chosen non-deterministically 
 init(myPosition) := {client, proxy, middle};
 next(myPosition) :=
     case
-        -- quando non lavoro, eseguo passeggiate casuali.
-        (state = walking)  & (myPosition = client) : {client, proxy};
+        -- When I don't have a job, i walk randomly.
+        (state = walking)  & (myPosition = client) & (c.state != request) : {client, proxy};
         (state = walking)  & (myPosition = middle) : {client, middle, proxy};
-        (state = walking)  & (myPosition = proxy)  : {proxy, middle};
-        -- sto andando dal proxy.
+        (state = walking)  & (myPosition = proxy)  & (p.state != waitingMUle) : {proxy, middle};
+        -- I'm going to proxy.
         (state = goingToP) & (myPosition = client) : middle;
         (state = goingToP) & (myPosition = middle) : proxy;
-        -- sto andando dal client.
+        -- I'm going to client.
         (state = goingToC) & (myPosition = proxy)  : middle;
         (state = goingToC) & (myPosition = middle) : client;
         TRUE : myPosition;
     esac;
 
+init(wallet) := 0;
+next(wallet) :=
+    case
+        -- the mule earns a token for his work.
+        (state = wait) : wallet + 1;
+        TRUE : wallet;
+    esac;
 ------------------------------------------------
 
 MODULE proxy(m1, m2, s)
 
 VAR
 
--- stato null        : sono sospeso.
--- stato messagge    : il mulo mi ha appena consegnato un messaggio.
--- stato forward     : sto inoltrando il messaggio al server.
--- stato wait        : sto aspettando che il server mi consegni la risposta.
--- stato responce    : il server mi ha appena consegnato una risposta.
--- stato waitingMule : mi metto in attesa del mulo per affidargli la risposta.
--- stato according   : mi sto organizzando con il mulo per consegnargli la risposta.
+-- state null        : I'm suspended 
+-- state messagge    : The mule just handed me a message. 
+-- state forward     : I am forwarding the message to the server. 
+-- state wait        : I am waiting for the server to deliver the responce to me.
+-- state responce    : The server just handed me a responce.
+-- state waitingMule : I wait for a mule to give him the responce.
+-- state according   : I'm arranging with the mule to deliver the answer.
 
-state : {null, message, forward, wait, responce, waitingMule, according};
+-- States that rappresent the client life cycle.
+state  : {null, message, forward, wait, responce, waitingMule, according};
+
+-- Variable that contains the id of the mule who has been given the job  
+choise : {null, 0, 1};
 
 ASSIGN
 
 init(state) := null;
 next(state) :=
     case
-        ----------
+        -- I received the message
+        (state = null) & (m1.state = gointToP & m1.myPosition = proxy) : message;
+        (state = null) & (m2.state = gointToP & m2.myPosition = proxy) : message;
+        (state = message) : forward;
+        (state = forward) : wait;
+        (state = wait)    : responce;
+        (state = responce) : waitingMule;
+        -- I am waiting for a mule to give him the responce.
+        (state = waitingMule) & (m1.myPosition != proxy & m2.myPosition != proxy) : waitingMule;
+        (state = waitingMule) & (m1.myPosition  = proxy | m2.myPosition  = proxy) : according;
+        (state = according) : null;  
+        TRUE : state;
     esac;
 
+init(choise) := null;
+next(choise) :=
+    case
+        -- proxy has to send a responce but both mules aren't in his zone.
+        (state = waitingMule) & (m1.myPosition != proxy) & (m2.myPosition != proxy) : null;
+        -- proxy has to send a responce and  only m1 is in his zone.
+        (state = waitingMule) & (m1.myPosition  = proxy) & (m2.myPosition != proxy) : 1;
+        -- proxy has to send a responce and  only m2 is in his zone.
+        (state = waitingMule) & (m1.myPosition != proxy) & (m2.myPosition  = proxy) : 2;
+        -- proxy has to send a responce and both mules are in his zone. The choice is non-deterministic.
+        (state = waitingMule) & (m1.myPosition  = proxy) & (m2.myPosition  = proxy) : {1,2}; 
+        (m1.state = wait) | (m2.state = wait) : null;
+        TRUE : choise;
+    esac;
 ------------------------------------------------
 
 
@@ -133,11 +223,12 @@ MODULE server(p)
 
 VAR
 
--- stato null     : sono sospeso.
--- stato messagge : il proxy mi ha appena consegnato il messaggio.
--- stato make     : sto preparando la risposta.
--- stato forward  : inoltro la risposta al proxy.
+-- state null     : I'm suspended.
+-- state messagge : The proxy just delivered the message to me 
+-- state make     : I'm making the responce.
+-- state forward  : I am forwarding the message to the proxy.
 
+-- States that rappresent the client life cycle.
 state : {null, messagge, make , forward};
 
 ASSIGN
@@ -145,7 +236,10 @@ ASSIGN
 init(state) := null;
 next(state) :=
     case
-
+        (state = null) & (p.message) : message;
+        state = message : make;
+        state = make    : forward;
+        state = forward : null;
     esac;
 
 
