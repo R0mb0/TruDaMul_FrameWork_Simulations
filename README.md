@@ -1,8 +1,10 @@
 Urbino`s University - Applied computer science - Programming languages and software verification.  
 
-# TruDaMul Framework Basic Implementation.
+# Basic Implementation of TruDaMul Framework.
 
-# TruDaMul Simple Definiction.  
+# Simple Definiction of TruDaMul Framework.  
+
+## TruDaMul Framework Targhet.
 
 The rise of Internet-of-Things enables the development of smart applications devoted to improving the quality of life in urban and rural areas, thus fostering the creation of smart territories.  
 Some dislocated areas, however, are underprivileged in the provision of such smart services due to the lack, inefficiency, or excessive cost of Internet access.
@@ -20,21 +22,22 @@ Data Mules allow for communication and data transfer even in the absence of Inte
 ### Distributed Ledger Technologies.  
 
 DLTs consist of a network of nodes that maintain a distributed ledger following the same protocol and, in the case of the blockchain, the ledger is organized into chronologically ordered blocks where each block is sequentially linked to the previous one.
+The DLTs are composed by this protocols:
 
-#### Block: Smart Contracts.  
+#### 1.Smart Contracts.  
 Smart Contracts are instructions stored in the blockchain and automatically triggered once the default condition is met.  
 The use of Smart Contracts allows anyone to employ DLTs to operate well beyond just currency transactions.  
 For instance, the creation of smart services, based on Smart Contracts, may enable users to interact with devices/vehicles present in smart
 transportation systems or to favor the interoperability among the devices and resources of Smart Cities.  
 
-#### Block: State Channels for Services Payments.  
+#### 2.State Channels for Services Payments.  
 State channels
 have been introduced to provide rapid DLT payments without
 the need to store all transactions on-chain, i.e. directly on the
 ledger, but mostly off-chain, i.e. outside of the ledger. The
 state channels protocol can be summarized in a few steps:  
 
-- Opening Channel - A user U opens a new state channel in a Smart Contract, by depositing an amount of the same token and indicating the other channel party, V .  
+- Opening Channel - A user U opens a new state channel in a Smart Contract, by depositing an amount of the same money and indicating the other channel party, V .  
 
 - Updating Balance - Both U and V , now, can communicate off-chain by exchanging digitally signed balance messages. These messages are used to update a balance value between U and V , i.e. if U has to pay V then the balance increases, otherwise the balance decreases.  
 
@@ -42,7 +45,7 @@ state channels protocol can be summarized in a few steps:
 
 ![Example:](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/BackGround_and_Related_Work.png)
 
-#### Block: Decentralized File Storages and Content Addressing.  
+#### 3.Decentralized File Storages and Content Addressing.  
 Decentralized File Storages (DFS) enable a content-based addressing approach, where the users, rather than establishing a connection with a Server, query the network asking for specific items.  
 
 ## TruDaMul Actors.  
@@ -85,7 +88,7 @@ simply invokes a method in the TruDaMul Smart Contract owned by C. The submitTen
 		- Address.  
 		- And the signature of address.  
 
-	* Automatically checks the validity of the signatures and locks the amount of tokens indicated by C in tender in favor of P.  
+	* Automatically checks the validity of the signatures and locks the amount of money indicated by C in tender in favor of P.  
 
 	* Allows M1 to close the state channel with C in the future, using the current balanceM1 object.  
 
