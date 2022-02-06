@@ -1,9 +1,9 @@
 Urbino`s University - Applied computer science - Programming languages and software verification.
 
-# Aim.
+# Aim
 The aim is to provide a very base working implementation of the framework from which implement the other specifc framework case to test.  
 
-# Summary.   
+# Summary   
 
 ### Actors Implemented:
 
