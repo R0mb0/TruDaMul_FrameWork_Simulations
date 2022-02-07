@@ -2,9 +2,10 @@
 \usepackage[italian]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage{imakeidx}
+%\usepackage{}
 
 
-\title{ Implementazione  e Analisi "TruDaMul Framework" .}
+\title{ Implementazione  e Analisi "TruDaMul Framework".}
 \author{Francesco Rossi \\
 				Francesco Rombaldoni}
 \date{}
@@ -17,6 +18,72 @@
 	\index{generate}
 	\newpage
 	
-	\section{Presentazione del lavoro.}
+	\section{Obiettivo del  lavoro.}
+	L'obiettivo del lavoro è stato quello di verificare alcune proprietà del "TruDaMul Framework" tramite una implementazione semplificata dello stesso, realizzata con l'ausilio del linguaggio "NuSMV".\\
+	
+	\section{Svolgimento del lavoro e strumenti usati}
+	Il lavoro è stato svolto aprendo una "repositiry" su "GitHub" alla quale ci si è interfacciati utilizzando il programma "GitHubDesktop". La "repository" (da ora chiamata semplicemente "repo") è stata poi suddivisa in tre "branch", in ordine: "main branch" è stato usato per ospitare la presentazione del progetto e in conclusione il "merging" con il "branch" contenente la versione del "Framework" più rifinita; il "Case Base branch" è stato usato per ospitare una implementazione base del "Framework", dalla quale successivamente sono stati fatti ulteriori "brach" per la costruzione di casi più specifici da testare; l'ultimo "branch", chiamato "Relation" è servito per ospitare la relazione. \\
+	Terminata l'organizzaione della "repo", si è passati ad installare i programmi necessari per lo sviluppo del "Framework" con i relativi test e per la scrittura della relazione in \LaTeX. In Particolare per poter disporre di un ambiente integrato per lo sviluppo del "Framework" è stato installato il "JDK di Java" per fare in modo di installare successivamente "Eclipse" con l'estenzione "NuSMV"; per fare in modo di eseguire il "Framework" è stata scaricata l'applicazione per "Bash" di "NuSMV"; infine per scrivere la relazione in \LaTeX è stato installato "TeX Live" e "TeXstudio", rispettivamente per compilare e per scrivere.\\
+	Una volta aver terminato di scrivere la presentazione del progetto si è passati alla implementazione  del caso base, definendo i comportamenti ed il numero minimo degli attori, oltre che le prime proprietà da verificare. Il passo successivo è stato quello di creare un nuovo "branch" a partire dal caso base, in maniera tale da poter specializzare quest'ultimo per la costruzione di  casi specifici futuri, che saranno a loro volta dei "branch".\\
+	 
+	
+	\section{Descrizione del 'Caso Base'}
+	\subsection{Attori}
+	Il caso base si compone dei seguenti attori: 
+	\begin{itemize}
+		\item un Clinet.
+		\item due Muli.
+		\item un Proxy.
+		\item un Server,.
+	\end{itemize}
+	
+	\subsection{Descrizione degli attori}
+	\begin{itemize}
+		\item Il Client che è in grado di comunicare soltanto con i Muli è composto dai seguenti elementi:
+				  \begin{itemize}
+					\item Una variabile stato che può assumere i seguenti valori:
+							\begin{itemize}
+								\item Null se il Client non ha un messaggio da inviare.
+							\end{itemize}
+					\end{itemize}
+		
+		\item I Muli sono in grado di comunicare con il Client e con il Proxy, inoltre conoscono il proprio codice identificativo. Il compito dei Muli è  quello di mettere in comunicazione il Client con il Proxy e vice versa, questa cosa la fanno grazie alla loro capacità di prendere un messaggio e di consegnarlo al destinatario. I Muli si muovono casualmente tra il Client ed il Proxy, in attesa di ricevere un messaggio da consegnare. I Muli si fanno pagare per il loro lavoro esclusivamente dal Client; infatti il Mulo si fa pagare dal Client prima di ritirare un messaggio da consegnare e nel caso in cui il mulo consegni al Client una risposta data dal Server, il Client dovrà pagare il mulo per poter vedere la risposta.
+		
+		\item Il Proxy è un attore che è in grado di comunicare soltanto con i Muli e con il Server, il suo compito è quello di inoltrare al Server il messaggio del Client che i Muli gli hanno consegnato. Una volta aver inoltrato il messaggio al Server, il Proxy, rimane in attesa che quest'ultimo gli inoltri la risposta da dover consegnare al Client che ha mandato il messaggio. Appena il Proxy riceve la risposta dal Server, resta in attesa di poter inoltrare la risposta ad un Mulo, il quale la dovrà poi recapitare al Client.
+		
+		\item Il Server che è in grado solo di comunicare con il Proxy, il suo compito è quello di ricevere i messaggi dal Proxy, di elaborare una risposta e infine di inoltrare la risposta a quest'ultimo in modo che possa essere consegnata al Client.
+	\end{itemize}
+
+\subsection{Flusso di lavoro}
+	\begin{enumerate}
+	\item All'inizio i Muli camminano casualmente tra il Client ed il Proxy, in attesa che qualcuno abbia bisogno di loro per consegnare un messaggio.
+	
+	\item Se il Client ha bisogno di un Mulo per mandare un messaggio, entra nella modalità di richiesta, rimanendo in attesa di un Mulo a cui poter affidare il messaggio.
+	
+	\item Quando un Mulo raggiunge la zona del Client, controlla se quest'ultimo vuole inoltrare un messaggio, nel caso in cui la risposta è positiva può iniziare la fase di scambio, dove il Client paga il Mulo consegnandoli il messaggio da inoltrare al Proxy.
+	
+	\item Il Mulo cammina in maniera causale fino al raggiungimento del Proxy.
+	
+	\item Il Mulo consegna il messaggio al Proxy e successivamente ricomincia a muoversi casualmente tra il Proxy ed il Client.
+	
+	\item Quando il Proxy riceve il messaggio, lo inoltra al Server e attende una risposta da quest'ultimo .
+	
+	\item Quando il Server riceve un messaggio dal Proxy, inizia a elaborare una risposta da dover inoltrare a quest'ultimo.
+	
+	\item Quando il Proxy ha ricevuto la risposta dal Server entra in modalità richiesta, attendendo il passaggio  di un Mulo a cui poter inoltrare la risposta da dover consegnare al Client. 
+	
+	\item Una volta che il Mulo è nella zona del Proxy, controlla se quest'ultimo ha un messaggio da inviare al Client, se la risposta è affermativa, allora il mulo si prendere carico della risposta da consegnare al Client. 
+	
+	\item Il Mulo continua a muoversi in maniera causale fino a raggiungere la zona del Client. 
+	
+	\item A questo punto il Client paga il Mulo per poter vedere la risposta.
+	\end{enumerate}
+
+\subsection{Test implementati}
+\begin{itemize}
+	\item È stato implementato il test per verificare se viene sempre soddisfatta la richiesta del Client, ovvero se il Client quando ha bisogno di inviare un messaggio viene sempre servito e se riceve sempre la risposta formulata dal Server.\\
+	Il risultato dimostra che siccome i muli si muovono in maniera causale, potrebbero non arrivare mai dal Client, come anche dal Proxy, motivo per cui il Client potrebbe non venire sempre servito oppure potrebbe non ricevere la risposta da Server.
+	
+\end{itemize}
 	
 	\end{document}
