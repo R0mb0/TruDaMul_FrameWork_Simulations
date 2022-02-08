@@ -18,16 +18,21 @@ s  : server(p);
 
 --        ** Properties to Check **        --
  
--- reachability  property FALSE
+-- reachability  property, the client doesn't reach a state
+-- where the wallet value is < 0 | FALSE
 CTLSPEC
 EF(c.wallet < 0)
--- reachability  property TRUE
+
+-- reachability  property, there is a state where m1 has
+-- performed all the jobs | TRUE
 CTLSPEC
 EF(m1.wallet = 50 & m2.wallet = 0)
--- liveness property FALSE
+
+-- liveness property, the client's request may go unheard | FALSE
 CTLSPEC
 AG(c.state = request -> AF(c.state = according))
--- liveness property FALSE
+
+-- liveness property, the proxy's request may go unheard | FALSE
 CTLSPEC
 AG(p.state = waitingMule -> AF(p.state = according))
 
