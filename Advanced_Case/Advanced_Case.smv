@@ -10,7 +10,7 @@ MODULE main
 VAR
 
 -- 1,2 are two variables used to distinguish the two different mules   
-c  : client(m1, m2);
+c  : client( m1, m2);
 m1 : mule(1, c, p); 
 m2 : mule(2, c, p);
 p  : proxy(m1, m2, s);
@@ -34,7 +34,7 @@ AG(p.state = waitingMule -> AF(p.state = according))
 ------------------------------ End Main------------------------------
 
 ------------------------------ Begin Client ------------------------------
-MODULE client(m1, m2)
+MODULE client(id, m1, m2, safety)
 
 VAR
 
@@ -53,6 +53,9 @@ wallet : 0..50;
 --  <<Variable Choice contains the chosen mule id. >> 
 choice : 0..2;
 
+safety : boolean;
+
+
 ASSIGN
 
 init(state)  := null;
@@ -63,18 +66,22 @@ next(state)  :=
         state = null : {null, request};
         -- At least one mule is in the client's position.
         (state = request) & (m1.Position = client | m2.Position = client) : according;
-        state = according : waiting;
+        (safety = TRUE) & (state = according) : waiting;
+        (safety = FALSE) & (state = according) & (m1.id = choise)
+          : (m1.decision = accept) ? waiting : request;
+        (safety = FALSE) & (state = according) & (m2.id = choise)
+          : (m2.decision = accept) ? waiting : request;    
+        (state = waiting) & (m1.message = lost | m2.message = lost) : request;    
         -- The client received the response from the server.
         (state = waiting) & (m1.state = goingToC & m1.Position = client) : response; 
         (state = waiting) & (m2.state = goingToC & m2.Position = client) : response;
         -- Message sent to proxy.
         (state = waiting ) & ((m1.state = deliverToP) | (m2.state = deliverToP)) : payment;  
         state  = response : payment; 
-        (state = payment) : waiting;
         -- Mule hired to deliver the message.
         (state = payment) & (m1.state = wait & m1.Position = proxy) : waiting;   
         (state = payment) & (m2.state = wait & m2.Position = proxy) : waiting;  
-        -- Mule payed to delivering the ansewer
+        -- Mule payed to delivering the answer
         (state = payment) & (m1.state = wait & m2.Position = client) : null;
         (state = payment) & (m1.state = wait & m2.Position = client) : null;
         TRUE : state;
@@ -95,15 +102,39 @@ next(choice) :=
         -- Client has to send a message but both mules aren't in his zone.
         (state = request) & (m1.Position != client) & (m2.Position != client) : 0;
         -- Client has to send a message and only m1 is in his position.
-        (state = request) & (m1.Position  = client) & (m2.Position != client) : 1;
+        (state = request) & (m1.Position  = client) & (m1.blacklist = FALSE) 
+        & (m2.Position != client) : 1;
+        (state = request) & (m1.Position  = client) & (m1.blacklist = TRUE)
+        & (m2.Position != client) : {0,1};       
         -- Client has to send a message and only m2 is in his position.
-        (state = request) & (m1.Position != client) & (m2.Position  = client) : 2;
+        (state = request) & (m1.Position != client) & (m2.Position  = client) 
+        & (m2.blacklist = FALSE) : 2;
+		(state = request) & (m1.Position != client) & (m2.Position = client) 
+		& (m2.blacklist = TRUE)  : {0,2};               
         -- Client has to send a message and both mules are in his zone. The choice is non-deterministic. 
-        (state = request) & (m1.Position  = client) & (m2.Position  = client) : {1,2};
+        (state = request) & (m1.Position  = client) & (m2.Position  = client)
+        & (m1.blacklist = FALSE) & (m2.blacklist = TRUE) : 1;
+        (state = request) & (m1.Position  = client) & (m2.Position  = client)
+        & (m1.blacklist = TRUE) & (m2.blacklist = FALSE) : 2;
+        (state = request) & (m1.Position  = client) & (m2.Position  = client)
+        & (m1.blacklist = FALSE) & (m2.blacklist = FALSE) : {1,2};
+        (state = request) & (m1.Position  = client) & (m2.Position  = client)
+        & (m1.blacklist = TRUE) & (m2.blacklist = TRUE) : {0,1,2};        
         -- the job is done. 
+        (m1.message = lost) | (m2.message = lost) : 0;
         (state = payment) : 0;
         TRUE : choice;
     esac;
+
+init(safety) := {TRUE, FALSE};
+next(safety) :=
+    case
+    	-- ogni volta che il client sta pagando, il valore safety cambia
+		(state = payment) : {TRUE, FALSE};
+        TRUE : safety;
+    esac;
+    
+
 
 ------------------------------ End Client ------------------------------
 
@@ -130,6 +161,12 @@ Position : {client, proxy, middle};
 --  <<Mule wallet (initialized with 0 tokens).>>  
 wallet : 0..50;
 
+message : {null, lost, owned};
+
+blacklist : boolean;
+
+decision : {null, accept, refuse};
+
 ASSIGN
 
 init(state) := walking;
@@ -144,14 +181,15 @@ next(state) :=
         (state = talkingToC) & (c.choice != id)  : walking;
         (state = talkingToP) & (p.choice  = id)  : goingToC;
         (state = talkingToP) & (p.choice != id)  : walking;
+        (message = lost) : walking
         -- Going to proxy.
-        (state = goingToP) & (Position = client) : goingToP;
-        (state = goingToP) & (Position = middle) : goingToP;
-        (state = goingToP) & (Position = proxy)  : deliverToP;
+        (message = owned) & (state = goingToP) & (Position = client) : goingToP;
+        (message = owned) & (state = goingToP) & (Position = middle) : goingToP;
+        (message = owned) & (state = goingToP) & (Position = proxy)  : deliverToP;
         -- Going to client.
-        (state = goingToC) & (Position = proxy)  : goingToP;
-        (state = goingToC) & (Position = middle) : goingToP;
-        (state = goingToC) & (Position = client) : deliverToC;
+        (message = owned) & (state = goingToC) & (Position = proxy)  : goingToC;
+        (message = owned) & (state = goingToC) & (Position = middle) : goingToC;
+        (message = owned) & (state = goingToC) & (Position = client) : deliverToC;
         -- Requesting to get paid.
         (state = deliverToP) | (state = deliverToC) : wait;
         -- Job Terminated.
@@ -165,6 +203,7 @@ next(Position) :=
     case
         -- Walking randomly waiting for a job.
         (state = walking)  & (Position = client) & (c.state != request) : {client, middle};
+        (state = talkingToC) & (c.choise != id) : middle;
         (state = walking)  & (Position = middle) : {client, middle, proxy};
         (state = walking)  & (Position = proxy)  & (p.state != waitingMule) : {proxy, middle};
         -- Going to proxy.
@@ -173,6 +212,7 @@ next(Position) :=
         -- Going to client.
         (state = goingToC) & (Position = proxy)  : middle;
         (state = goingToC) & (Position = middle) : client;
+     
         TRUE : Position;
     esac;
 
@@ -181,8 +221,48 @@ next(wallet) :=
     case
     	(wallet = 50)  : 50;
         -- Earned a token for have completed the job.
-        (state = wait) : wallet + 1;
+        (c.state = payment) : wallet + 1;
         TRUE : wallet;
+    esac;
+
+init(message) := null;
+next(message) :=
+    case
+    	-- il client mi ha affidato il lavoro.
+    	(message = lost) : null;
+		(state = talkingToC) & (c.choise = id) & (decision = accept) : owned;
+		(state = talkingToC) & (c.choise = id) & (decision = refuse) : null;
+		(c.safety = TRUE)  & (state = goingToP) & (Position = client) : owned;
+		(c.safety = FALSE) & (state = goingToP) & (Position = client) : {lost, owned};	
+		(message = owned) & (state = goingToP) & (Position = middle) : {lost, owned};
+		(state = deliverToP)  : null;
+		(state = talkingToP) & (p.choise = id) : owned;
+		message = owned) & (state = goingToC) & (Position = middle) : {lost, owned};
+        (c.safety = TRUE)  & (state = goingToC) & (Position = client) : owned;
+		(c.safety = FALSE) & (state = goingToC) & (Position = client) : {lost, owned};						
+		(state = deliverToC) : null;	
+        TRUE : message;
+    esac;
+    
+init(blacklist) := FALSE;
+next(blacklist) :=
+    case
+		-- perdo il messaggio, vado nella blacklist
+		(message = lost) : TRUE;
+		-- il proxy ha ricevuto correttamente il messaggio
+		(p.state = message) | (c.state = responce) : TRUE;
+        TRUE : blacklist;
+    esac;
+
+init(decision) := null;
+next(decision) :=
+    case
+    	(Position = client) & (c.state = request) & (c.safety = TRUE)  : accept;
+    	(Position = client) & (c.state = request) & (c.safety = FALSE) : {refuse, accept};
+    	(message = lost) : null
+    	(state = talkingToC) & (c.choise != id) : null
+		(state = DeliverToP) : null;
+        TRUE : decision;
     esac;
 
 ------------------------------ End Mule ------------------------------
@@ -222,6 +302,8 @@ next(state) :=
         (state = waitingMule) & (m1.Position  = proxy | m2.Position  = proxy) : according;
         -- Returning to waiting for a message.
         (state = according) : null;  
+        (m1.state = goingToC & m1.message = lost) : waitingMule;
+        (m2.state = goingToC & m2.message = lost) : waitingMule;        
         TRUE : state;
     esac;
 
@@ -235,7 +317,8 @@ next(choice) :=
         -- Waiting to send a response to mule 2.
         (state = waitingMule) & (m1.Position != proxy) & (m2.Position  = proxy) : 2;
         -- Waiting to send a response but both mules are in zone. The assignment choice is non-deterministic.
-        (state = waitingMule) & (m1.Position  = proxy) & (m2.Position  = proxy) : {1,2}; 
+        (state = waitingMule) & (m1.Position  = proxy) & (m2.Position  = proxy) : {1,2};
+        (m1.message = lost) | (m2.message : lost) : 0; 
         (m1.state = wait) | (m2.state = wait) : 0;
         TRUE : choice;
     esac;
@@ -260,11 +343,11 @@ ASSIGN
 init(state) := null;
 next(state) :=
     case
-        -- Recived proxy's message.
+        -- Received proxy's message.
         (state = null) & (p.state = message) : message;
         -- Making a response.
         state = message : make;
-        -- Forwaring the response.
+        -- Forwarding the response.
         state = make    : forward;
         -- returning to suspended state.
         state = forward : null;
