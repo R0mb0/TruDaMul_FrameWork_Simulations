@@ -25,7 +25,7 @@ The aim is to provide a very base working implementation of the framework from w
 10. The Mule walks randomly until to reach the Client.
 11. The Mule delivers the answer to Client, after the Client pays the Mule, at the end the Mule returns to walk randomly.
 
-### Properties implementated:
+### Properties implemented:
 - If the Client's request will be always accomplished. 
 - If the Client's wallet can have a negative value.
 - If during the esecution always a Mule will be selected to deliver the Client's messages.
