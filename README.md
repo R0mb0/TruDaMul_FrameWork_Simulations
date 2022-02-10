@@ -7,10 +7,10 @@ The aim is to provide a very base working implementation of the framework from w
 
 ### Actors Implemented:
 
-- A Client that could interact with the mules.
-- Two Mules which know their identification and can interact with the Client and the Proxy. 
-- A Proxy that can interact with the mules and the server.
-- A Server that can interact with the proxy.
+- A Client that could interact with the Mules. The Client is composed by: a varibles named "State" that rapresent the internal state of the Client, a variable named "wallet" that represent the Client's money that could be spent to hire the Mules, and a variable named "Id" that is used to remeber the ids of the hired Mules.   
+- Two Mules which know their identification and can interact with the Client and the Proxy. The Mules are composed by: a variable named "State" that rapresent the internal state of the Mules and a variable named "Wallet" that represent the earned Mules money.
+- A Proxy that can interact with the mules and the server. The Proxy is composed by: a varibles named "State" that rapresent the internal state of the Proxy and a variable named "Id" that is used to remeber the ids of the hired Mules from Proxy.
+- A Server that can interact with the proxy. The server is composed by a variable named "State" that rapresent the internal state of the Server.
 
 ### WorkFlow Implemented:
 1. At the begining the Mules start to walk randomly between the Client and the Proxy. 
