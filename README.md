@@ -114,8 +114,8 @@ Later the implementation creates a specific test to check the system proprieties
 
 
 ## Project Credits.  
-Mirko Zichichi<sup>* +</sup>, Luca Serena <sup>+</sup>, Stefano Ferretti<sup>~</sup>, Gabriele D’Angelo<sup>+</sup>  
+Mirko Zichichi<sup> * +</sup>, Luca Serena <sup> +</sup>, Stefano Ferretti<sup> #</sup>, Gabriele D’Angelo<sup> +</sup>  
 <sup>*</sup> Ontology Engineering Group, Universidad Polit ecnica de Madrid, Spain  
 <sup>+</sup> Department of Computer Science and Engineering, University of Bologna, Italy  
-<sup>~</sup> Department of Pure and Applied Sciences, University of Urbino “Carlo Bo”, Italy  
+<sup>#</sup> Department of Pure and Applied Sciences, University of Urbino “Carlo Bo”, Italy  
 mirko.zichichi@upm.es, luca.serena2@unibo.it, stefano.ferretti@uniurb.it, g.dangelo@unibo.it  
