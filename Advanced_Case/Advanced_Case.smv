@@ -19,14 +19,18 @@ s  : server(p);
 --        ** Properties to Check **        --
  
 -- reachability  property FALSE
-CTLSPEC
-EF(c.wallet < 0)
+--CTLSPEC
+--EF(c.wallet < 0)
 -- reachability  property TRUE
-CTLSPEC
-EF(m1.wallet = 50 & m2.wallet = 0)
+--CTLSPEC
+--EF(m1.wallet = 50 & m2.wallet = 0)
 -- liveness property FALSE
 CTLSPEC
+EF m1.Position = middle
+CTLSPEC
 AG(c.state = request -> AF(c.state = according))
+CTLSPEC
+AG((c.state = request & c.safety = TRUE & m1.blacklist = FALSE & m2.blacklist = FALSE) -> AF(c.state = according))
 -- liveness property FALSE
 CTLSPEC
 AG(p.state = waitingMule -> AF(p.state = according))
