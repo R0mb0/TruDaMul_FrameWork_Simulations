@@ -20,9 +20,9 @@ Urbino`s University - Applied computer science - Programming languages and softw
 8. If a Mule with the Client's message reach the Proxy zone, the Mule delivers the message to Proxy, at the end the Mule returns to walk randomly.
 9. If the Mule that delivered the message to Proxy was 'black listed', that Mule come be 'white listed'.
 10. When the Proxy receives the messagge, delivers it to the Server and waits the answer of it.
-11. When the Server receives the message from the Proxy, it generates the message answer to deliver at Proxy.
-12. When the Proxy receives the answer from the server, switches it self in requesting mode and waits the arriving of a mule. 
-13. When a Mule arriving to the proxy zone, it checks if the Proxy has to deliver a message, if the checkin is positive, the Proxy deliver the answer to the Mule.
+11. When the Server receives the message from the Proxy, it generates the message answer, then deliver the answer to Proxy.
+12. When the Proxy receives the answer from the server, switches it self in requesting mode and waits the arriving of a Mule. 
+13. When a Mule arriving to the proxy zone, it checks if the Proxy has to deliver a message, if the checkin is positive, the Mule accept the answer message from Proxy.
 14. The Mule starts to walking randomly, if during the attempt to reach the Client, the Mule losts the Proxy's message, the mule come be 'black listed' (the probability to lost the message change if the Client to deliver the message is into the bad zone).
 15. If the Mule reach the Client's zone with the message, the mule delivers the answer to Client and come back to be 'white listed', after, the Client pays the Mule, at the end the Mule returns to walk randomly.
 
