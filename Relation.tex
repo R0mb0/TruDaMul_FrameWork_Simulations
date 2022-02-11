@@ -29,7 +29,7 @@
 	
 	\section{Descrizione del 'Caso Base'}
 	\subsection{Motivazione del 'Caso Base'} 
-	
+	Il 'Caso Base' è stato implementato per verificare se una implementazione base del "Framework" (composta da: un Client, due Muli, un Proxy ed un server) fosse stata in grado in primo luogo di soddisfare sempre i bisogni del Client, senza però creare una condizione di lavoro sbilanciata (per esempio il fatto che un Mulo in particolare possa venire scelto maggiormente o addirittura interamente dal Client), per ultimo verificare che non ci siano dei comportamenti anomali, come per esempio il fatto che il Client (privo di denaro) possa cercare di assoldare dei Muli.
 	\subsection{Attori}
 	Il caso base si compone dei seguenti attori: 
 	\begin{itemize}
@@ -64,7 +64,7 @@
 							\item Il Client entra nello stato di "Payment" quando vuole vedere la risposta che li è stata consegnata da un Mulo.
 							\item Una volta aver ricevuto la risposta la variabile "State" viene ripristinata al valore di partenza.
 							\end{itemize}
-						\item La variabile "Wallet" viene decrementata ad ogni pagamento effettuato dal Client.
+						\item Un comportamento che modifica la variabile "Wallet", la quale viene decrementata ad ogni pagamento effettuato dal Client.
 						\item Un comportamento che modifica la variabile "Choice":
 						\begin{itemize}
 							\item La variabile vale 0 il Client non ha consegnato nessun messaggio.
@@ -77,7 +77,7 @@
 				Il Client  è un attore che trovandosi in una condizione di isolamento dalla rete e avendo necessità do mandare un messaggio al server, assolda un Mulo (sotto compenso) per spedire il messaggio. Una volta aver pagato il Mulo ed averli consegnato il messaggio, il Client aspetta una risposta dal Server, la quale dovrà essere consegnata da un Mulo (non necessitante deve essere lo stesso che ha preso in carico il messaggio), il quale dovrà essere pagato dal Client per poter mostrare la risposta del Server.
 				
 		
-		\item I Muli che sono in grado di comunicare con il Client e con il Proxye che inoltre conoscono il proprio codice identificativo sono composti da:
+		\item I Muli che sono in grado di comunicare con il Client e con il Proxy e che  inoltre conoscono il proprio codice identificativo sono composti da:
 		\begin{itemize}
 			\item una variabile "State" che può assumere i seguenti valori:
 			\begin{itemize}
@@ -109,7 +109,7 @@
 		\item Il Mulo entra nello stato "Wait" se deve essere pagato dopo aver consegnato la risposta al Client.
 		\item Alla fine del lavoro la variabile "State" viene ripristinata al valore di partenza.
 	\end{itemize}
-	\item La variabile "Wallet" viene incrementata ogni volta che il mulo viene pagato.
+	\item Un comportamento che modifica la variabile "Wallet", la quale viene incrementata ogni volta che il mulo viene pagato.
 	\item Un comportamento che modifica la variabile "Posiction":
 	\begin{itemize}
 		\item Se il Mulo è nello stato "Walking" la variabile può assumere in modo non predicibile uno dei tre valori precedentemente elencati. 
@@ -216,7 +216,7 @@
 
 \section{Descrizione del 'Caso Avanzato'}
 \subsection{Motivazione del 'Caso  Avanzato'} 
-
+Il 'Caso Avanzato' è stato implementato per visualizzare i comportamenti del "Framework" nel caso in cui ci fosse un sistema di reputazione secondo il quale un Client che si trovi all'interno di una zona poco sicura per il Mulo possa essere rifiutato, siccome nella zona poco sicura aumenta la probabilità che il Mulo venga derubato del messaggio. Nel caso in cui il Mulo dovesse perdere il messaggio, viene inserito all'interno di una "balck list", nella quale sono segnati i Muli segnalati come poco affidabili. I Client di a loro volta,  possono accedere alla "black list" e sulla base di quest'ultima valutare di assoldare o meno un Mulo per spedire il proprio messaggio.
 \subsection{Attori}
 Il caso base si compone dei seguenti attori: 
 \begin{itemize}
@@ -252,7 +252,7 @@ Il caso base si compone dei seguenti attori:
 			\item Il Client entra nello stato di "Payment" quando vuole vedere la risposta che li è stata consegnata da un Mulo.
 			\item Una volta aver ricevuto la risposta la variabile "State" viene ripristinata al valore di partenza.
 		\end{itemize}
-		\item Un comportamento per la variabile "Wallet" che viene decrementata ad ogni pagamento effettuato dal Client.
+		\item Un comportamento per la variabile "Wallet" la quale viene decrementata ad ogni pagamento effettuato dal Client.
 		\item Un comportamento che modifica la variabile "Choice":
 		\begin{itemize}
 			\item La variabile vale 0 il Client non ha consegnato nessun messaggio.
@@ -261,12 +261,12 @@ Il caso base si compone dei seguenti attori:
 			\item Nel caso in cui entrambi i Muli siano in prossimità del Client la variabile assume un valore non deterministico tra 1 e 2.
 			\item Una volta aver ricevuto la risposta la variabile viene ripristinata a 0.
 		\end{itemize}
-	\item Un comportamento per la variabile "Safety" che cambia il suo stato in modo non predicibile ad ogni iterazione del programma.
+	\item Un comportamento per la variabile "Safety" che alterna gli stati booleani in modo non predicibile.
 	\end{itemize}
 	Il Client  è un attore che trovandosi in una condizione di isolamento dalla rete e avendo necessità do mandare un messaggio al server, assolda un Mulo (sotto compenso) per spedire il messaggio. Una volta aver pagato il Mulo ed averli consegnato il messaggio, il Client aspetta una risposta dal Server, la quale dovrà essere consegnata da un Mulo (non necessitante deve essere lo stesso che ha preso in carico il messaggio), il quale dovrà essere pagato dal Client per poter mostrare la risposta del Server.
 	
 	
-	\item I Muli che sono in grado di comunicare con il Client e con il Proxye che inoltre conoscono il proprio codice identificativo sono composti da:
+	\item I Muli che sono in grado di comunicare con il Client e con il Proxy e che inoltre conoscono il proprio codice identificativo sono composti da:
 	\begin{itemize}
 		\item una variabile "State" che può assumere i seguenti valori:
 		\begin{itemize}
@@ -287,6 +287,18 @@ Il caso base si compone dei seguenti attori:
 			\item "Proxy" se il Mulo si trova in prossimità del Proxy.
 		\end{itemize}
 	\item Una variabile "MessageState" che può assumere i seguenti valori:
+	\begin{itemize}
+		\item "Null" se il Mulo non ha ancora ritirato un messaggio.
+		\item "Lost" se il Mulo ha perso il messaggio.
+		\item "Owned" se il Mulo possiede ancora il messaggio e non l'ha ancora consegnato. 
+	\end{itemize}
+	\item Una variabile booleana "BlackList" la quale modella il caso in cui il Mulo sia stato o meno inserito all'interno di una "black list".
+ 	\item Una variabile "Decision" che può assumere i seguenti valori:
+ 	\begin{itemize}
+ 		\item "Null" se il Mulo non ha ancora ricevuto una proposta di lavoro da parte di un Client.
+ 		\item "Accept" se il Mulo ha accettato la proposta di lavoro fattagli dal Client.
+ 		\item "Refuse" se il Mulo non ha accettato la proposta di lavoro fattagli dal Client.
+ 	\end{itemize}
 		\item Un comportamento che modifica la variabile "State":
 		\begin{itemize}
 			\item Inizialmente la variabile è inizializzata con lo stato "Walking".
@@ -299,13 +311,34 @@ Il caso base si compone dei seguenti attori:
 			\item Il Mulo entra nello stato "Wait" se deve essere pagato dopo aver consegnato la risposta al Client.
 			\item Alla fine del lavoro la variabile "State" viene ripristinata al valore di partenza.
 		\end{itemize}
-		\item La variabile "Wallet" viene incrementata ogni volta che il mulo viene pagato.
+		\item Un comportamento che modifica la variabile "Wallet" la quale viene incrementata ogni volta che il mulo viene pagato.
 		\item Un comportamento che modifica la variabile "Posiction":
 		\begin{itemize}
 			\item Se il Mulo è nello stato "Walking" la variabile può assumere in modo non predicibile uno dei tre valori precedentemente elencati. 
 			\item Se il Mulo deve dirigersi verso il "Proxy", la variabile assume il valore "Proxy".
 			\item Se il Mulo deve dirigersi verso il "Client", la variabile assume il valore "Client".
 		\end{itemize}
+	\item Un comportamento che modifica la variabile "MessageState":
+	\begin{itemize}
+		\item Inizialmente la variabile è inizializzata nello stato "Null" siccome il Mulo non ha prelevato ancora nessun messaggio.
+		\item Se il Mulo accetta il lavoro proposto dal Client e se il Client  accetta il Mulo, allora lo stato della variabile diventa "Owned".
+		\item Se il Mulo non accetta il lavoro proposto dal Client, oppure se il Client non accetta il Mulo,  la variabile rimane nello stato "Null".
+		\item Se il Mulo si trova in corrispondenza di una zona poco sicura, c`è il pericolo che il mulo perda il messaggio (se se si dirige verso la zone poco sicura e sia nel caso in cui dovesse provenire), in questo caso la variabile potrebbe assumere il valore "Lost" non deterministicamente.
+		\item Se il Mulo si trova all'interno della zona a metà tra il Client ed il Proxy, c'è pericolo che perda il messaggio, in questo caso la variabile potrebbe assumere il valore "Lost" non deterministicamente..
+		\item una volta che il messaggio è stato consegnato la variabile torna al valore "Null".
+	\end{itemize}
+	\item Un comportamento che modifica la variabile "BlackList":
+	\begin{itemize}
+		\item Se il Mulo durante una consegna perde il messaggio, la variabile assume il valore di 'vero'.
+		\item Se il Mulo ha fatto una consegna che è andata a buon fine (il Mulo non ha perso il messaggio), la variabile assume il valore di 'falso'.
+	\end{itemize} 
+	\item Un comportamento che modifica la variabile "Decision"
+	\begin{itemize}
+		\item Inizialmente la variabile è inizializzata con il valore "Null".
+		\item Se il Client in prossimità del Mulo,  è in una zona sicura, allora la variabile assume il valore "Accept". 
+		\item Se il Client in prossimità del Mulo, è in una zona poco sicura, allora la variabile può assumere non deterministicamente un valore tra "Accept" e "Refuse".
+		\item A termine della parte di scelta, la variabile ritorna a valere "Null".
+	\end{itemize}
 	\end{itemize}
 	Il compito dei Muli è  quello di mettere in comunicazione il Client con il Proxy e vice versa, questa cosa la fanno grazie alla loro capacità di prendere un messaggio e di consegnarlo al destinatario. I Muli si muovono casualmente tra il Client ed il Proxy, in attesa di ricevere un messaggio da consegnare. I Muli si fanno pagare per il loro lavoro esclusivamente dal Client; infatti il Mulo si fa pagare dal Client prima di ritirare un messaggio da consegnare e nel caso in cui il mulo consegni al Client una risposta data dal Server, il Client dovrà pagare il mulo per poter vedere la risposta.
 	
@@ -368,40 +401,29 @@ Il caso base si compone dei seguenti attori:
 
 \subsection{Flusso di lavoro}
 \begin{enumerate}
-	\item All'inizio i Muli camminano casualmente tra il Client ed il Proxy, in attesa che qualcuno abbia bisogno di loro per consegnare un messaggio.
-	
-	\item Se il Client ha bisogno di un Mulo per mandare un messaggio, entra nella modalità di richiesta, rimanendo in attesa di un Mulo a cui poter affidare il messaggio.
-	
-	\item Quando un Mulo raggiunge la zona del Client, controlla se quest'ultimo vuole inoltrare un messaggio, nel caso in cui la risposta è positiva può iniziare la fase di scambio, dove il Client paga il Mulo consegnandoli il messaggio da inoltrare al Proxy.
-	
-	\item Il Mulo cammina in maniera causale fino al raggiungimento del Proxy.
-	
-	\item Il Mulo consegna il messaggio al Proxy e successivamente ricomincia a muoversi casualmente tra il Proxy ed il Client.
-	
-	\item Quando il Proxy riceve il messaggio, lo inoltra al Server e attende una risposta da quest'ultimo .
-	
-	\item Quando il Server riceve un messaggio dal Proxy, inizia a elaborare una risposta da dover inoltrare a quest'ultimo.
-	
-	\item Quando il Proxy ha ricevuto la risposta dal Server entra in modalità richiesta, attendendo il passaggio  di un Mulo a cui poter inoltrare la risposta da dover consegnare al Client. 
-	
-	\item Una volta che il Mulo è nella zona del Proxy, controlla se quest'ultimo ha un messaggio da inviare al Client, se la risposta è affermativa, allora il mulo si prendere carico della risposta da consegnare al Client. 
-	
-	\item Il Mulo continua a muoversi in maniera causale fino a raggiungere la zona del Client. 
-	
-	\item A questo punto il Client paga il Mulo per poter vedere la risposta.
+	\item All'inizio i muli incominciano a camminare casualmente tra il Client ed il Proxy.
+	\item  Se il Client possiede un messaggio da inviare, entra nello stato di richiesta e attende il passaggio di un mulo nella sua zona, in modo da potergli consegnare il messaggio.
+	\item Quando un mulo arriva nella zona di un Client controlla se il Client è nello stato di richiesta, se questa condizione è vera allora il Mulo incomincia a parlare con il Client.
+	\item Se il Mulo è stato inserito nella "black list" il Client può scegliere non deterministicamente di accettare o meno di affidare il messaggio al Mulo.
+	\item Se il Client si trova all'interno di una zona pericolosa, il Mulo può scogliere non deterministicamente di accettare o meno il messaggio dal Client. 
+	\item Se il Client ha accettato il Mulo e se il Mulo ha accettato il messaggio del Client allora, il Client paga il Mulo per il lavoro e successivamente il Mulo comincia a camminare in modo casuale per dirigersi verso il Proxy.
+	\item In questo momento può accadere che il Mulo perdi il messaggio (la probabilità di perdere il messaggio aumenta se il mulo proviene da un Client che è all'interno di una zona poco sicura), se il Mulo perde il messaggio viene inserito nella "black list".
+	\item Se il Mulo riesce ad arrivare in prossimità del Proxy senza aver peso il messaggio, Il mulo consegna il messaggio al Proxy.
+	\item Se il la consegna del Mulo è andata a buon fine (non ha perso il messaggio) e se prima della consegna il Mulo era già stato inserito all'interno della "black list", allora il Mulo viene tolto dalla "black list".
+	\item Appena il Proxy riceve il messaggio da Mulo, lo inoltra al Server, aspettando che il Server risponda al messaggio.
+	\item Appena il Server riceve il messaggio inoltrato dal Proxy, elabora la risposta per il messaggio e la inoltra al Proxy.
+	\item Appena il Proxy riceve la risposta dal Server, entra nello stato di richiesta, attendendo che un Mulo a cui poter affidare la risposta da consegnare al Client.
+	\item Appena un Mulo arriva in prossimità del Proxy, controlla se quest'ultimo ha necessità di spedire un messaggio, se il controllo da esito positivo, il Mulo accetta il messaggio del Proxy.
+	\item Il mulo comincia quindi a camminare in modo causale fino a raggiungere il Client.
+	\item Se durante il tragitto il Mulo perde il messaggio, Viene inserito nella "black list". (la probabilità di perdere il messaggio aumenta se il Client da raggiungere è situato all'interno di una zona pericolosa).
+	\item Se il Mulo raggiunge il Client senza aver perso il messaggio, sotto pagamento consegna il messaggio al Client. A questo punto se precedentemente il Mulo era stato inserito all'interno della "black list", viene rimosso dalla lista.
 \end{enumerate}
 
 \subsection{Test implementati}
 \begin{itemize}
-	\item È stato implementato il test per verificare se viene sempre soddisfatta la richiesta del Client, ovvero se il Client quando ha bisogno di inviare un messaggio viene sempre servito e se riceve sempre la risposta formulata dal Server.\\
-	Il risultato dimostra che siccome i muli si muovono in maniera causale, potrebbero non arrivare mai dal Client, come anche dal Proxy, motivo per cui il Client potrebbe non venire sempre servito oppure potrebbe non ricevere la risposta da Server.
-	\item È stato implementato un test per verificare che il portafoglio del Client possa scendere sotto lo 0 durante l'esecuzione.\\
-	Il risultato mostra che se il Client non ha più soldi con cui assoldare i Muli, allora rimane sempre nello stato in cui non deve mandare un messaggio.
-	\item È stato implementato un test per verificare se durante una esecuzione soltanto uno dei due Muli è stato scelto dal Client per fare tutte le consegne.\\
-	Il risultato dimostra che siccome la scelta del Mulo non è predicibile allora può accadere in un caso estremo che soltanto un Mulo esegue tutte le consegne.
-	\item È stato implementato un test per verificare se quando il Client entra nello stato di richiesta di un Mulo, la sua richiesta viene sempre soddisfatta.\\
-	il risultato dimostra che il caso di richiesta il Client viene sempre soddisfatto.
-	
+	\item È stato implementato un test per verificare che la richiesta del Client venga sempre soddisfatta dai Muli.
+	\item È stato implementato un test per verificare che la richiesta del Proxy venga sempre soddisfatta dai Muli.
+	\item È stato implementato un testo per verificare che la richiesta del Client venga sempre soddisfatta dai Muli che non sono stati inseriti nella "balck list"
 \end{itemize}
 	
 	\end{document}
