@@ -17,7 +17,10 @@ p  : proxy(m1, m2, s);
 s  : server(p);
 
 --               ** Properties to Check **           --
---                REACHABILITY PROPERTIES            --
+--                REACHABILITY PROPERTIES 
+-- Correctness property. The message can't be owned by both mule. -- FALSE
+CTLSPEC
+EF (m1.messageState = owned & m2.messageState = owned)            --
 -- Correctness property. Client's wallet never goes under 0. -- FALSE
 CTLSPEC
 EF (c.wallet < 0) 
@@ -65,9 +68,7 @@ AG(p.state = forward -> AF(p.state = response))
 -- When the message is deliver, the message was not lost -- TRUE
 CTLSPEC
 AG((m1.state = deliverToP | m1.state = deliverToC) -> m1.messageState = owned)
--- The job is given to a mule an infinite number of times and always loses the message --TRUE
-CTLSPEC
-AG AF ((m1.state  = goingToC | m1.state = goingToP) -> AF(m1.messageState = lost))
+
 ------------------------------ End Main------------------------------
 
 ------------------------------ Begin Client ------------------------------
