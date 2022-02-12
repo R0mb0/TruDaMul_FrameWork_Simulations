@@ -18,13 +18,13 @@ s  : server(p);
 
 --               ** Properties to Check **           --
 --                REACHABILITY PROPERTIES            --
--- Correctness property. Client's wallet never goes under 0. -- TRUE
+-- Correctness property. Client's wallet never goes under 0. -- FALSE
 CTLSPEC
 EF (c.wallet < 0) 
--- Correctness property. Mule's wallet never goes > 0. -- TRUE
+-- Correctness property. Mule's wallet never goes > 0. -- FALSE
 CTLSPEC
 EF (m1.wallet > 50 | m2.wallet > 50)
--- "Starvation", one of the mules never does a job. -- TRUE
+-- "Fairness", one of the mules never does a job. -- TRUE
 CTLSPEC
 EF (m1.wallet = 50 | m2.wallet = 50)
 --                  LIVENESS PROPERTIES              -- 
