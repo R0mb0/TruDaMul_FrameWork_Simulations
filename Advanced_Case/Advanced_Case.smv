@@ -26,7 +26,20 @@ CTLSPEC
 EF (m1.wallet > 50 | m2.wallet > 50)
 -- "Fairness", one of the mules never does a job. -- TRUE
 CTLSPEC
-EF (m1.wallet = 50 | m2.wallet = 50)
+EF (m1.wallet = 50 & m2.wallet = 0)
+-- Both mules cannot be given the same job -- FALSE
+CTLSPEC
+EF (m1.state = goingToC & m2.state = goingToC)
+CTLSPEC
+EF (m1.state = goingToP & m2.state = goingToP)
+-- the client from a certain point on could not have more messages to send,
+-- so this property is FALSE 
+CTLSPEC
+AG AF (c.state = request)
+-- when the mule finishes a job, he  always get paid --TRUE
+CTLSPEC
+AG((m1.state = deliverToP | m1.state = deliverToC) -> AF(m1.state = walking))
+
 --                  LIVENESS PROPERTIES              -- 
 -- The system isn't reactive due to the random walk of mules.
 -- For example, they can loop in middle zone, so they will
@@ -45,7 +58,16 @@ AG(p.state = waitingMule -> AF(p.state = according))
 -- may not receive the reply due to random walks or message always lost. -- FALSE 
 CTLSPEC
 AG(c.state = waiting -> AF(c.state = response))
-
+-- when the proxy forwards the message to the server, it always receives the reply.
+-- TRUE
+CTLSPEC
+AG(p.state = forward -> AF(p.state = response))
+-- When the message is deliver, the message was not lost -- TRUE
+CTLSPEC
+AG((m1.state = deliverToP | m1.state = deliverToC) -> m1.messageState = owned)
+-- The job is given to a mule an infinite number of times and always loses the message --TRUE
+CTLSPEC
+AG AF ((m1.state  = goingToC | m1.state = goingToP) -> AF(m1.messageState = lost))
 ------------------------------ End Main------------------------------
 
 ------------------------------ Begin Client ------------------------------
@@ -98,8 +120,10 @@ next(state)  :=
         (state = waiting) & ((m1.state = goingToP & m1.messageState = lost) | 
         (m2.state = goingToP & m2.messageState = lost))  : request;    
         -- The client received the response from the server.
-        (state = waiting) & (m1.state = goingToC & m1.position = client) : response; 
-        (state = waiting) & (m2.state = goingToC & m2.position = client) : response;
+        (state = waiting) & (m1.state = goingToC & m1.position = client)
+        & (m1.messageState = owned) : response; 
+        (state = waiting) & (m2.state = goingToC & m2.position = client)
+        & (m1.messageState = owned) : response;
         -- Message sent to proxy, the client pays the mule.
         (state = waiting ) & ((m1.state = deliverToP) | (m2.state = deliverToP)) : payment;  
         -- Response received, the client pays pay the mule.
@@ -159,9 +183,12 @@ next(choice) :=
         -- Both are in blacklist. Choice is non-deterministic.
         (state = request) & (m1.position  = client) & (m2.position  = client)
         & (m1.blacklist = TRUE) & (m2.blacklist = TRUE) : {0,1,2};        
-        -- message lost.
+        -- Message lost.
         (m1.messageState = lost) | (m2.messageState = lost) : 0;
-        -- the job is done. 
+        -- The mule chosen by the client refused it
+        (state = according) & (choice = 1) & (m1.decision = refuse) : 0;
+        (state = according) & (choice = 2) & (m2.decision = refuse) : 0;
+        -- The job is done. 
         (state = payment) : 0;
         TRUE : choice;
     esac;
@@ -273,7 +300,7 @@ next(wallet) :=
     	-- the mule can't earn anymore
     	(wallet = 50)  : 50;
         -- Earned a token for have completed the job.
-        (c.state = payment) : wallet + 1;
+        (state = wait) : wallet + 1;
         TRUE : wallet;
     esac;
 
@@ -318,7 +345,7 @@ next(blacklist) :=
 		(messageState = lost) : TRUE;
 		-- When the proxy receives the message or the client receives the reply,
 		-- The mule leaves the blacklist.
-		(p.state = message) | (c.state = response) : TRUE;
+		(p.state = message) | (c.state = response) : FALSE;
         TRUE : blacklist;
     esac;
 
@@ -367,8 +394,10 @@ init(state) := null;
 next(state) :=
     case
         -- The proxy Received the message.
-        (state = null) & (m1.state = goingToP & m1.position = proxy) : message;
-        (state = null) & (m2.state = goingToP & m2.position = proxy) : message;
+        (state = null) & (m1.state = goingToP & m1.position = proxy) 
+        & (m1.messageState = owned) : message;
+        (state = null) & (m2.state = goingToP & m2.position = proxy)
+        & (m2.messageState = owned) : message;
         (state = message) : forward;
         (state = forward) : wait;
         (state = wait)    : response;
