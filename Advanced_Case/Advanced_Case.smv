@@ -2,38 +2,49 @@
 --        **  **        --
 --  <<>>  
 
--- TruDaMul Framwork base implementation with base properties to check.
+-- TruDaMul Framework base implementation with base properties to check.
 
 ------------------------------ Begin Main ------------------------------
 MODULE main
 
 VAR
 
--- 1,2 are two variables used to distinguish the two different mules   
+-- 1,2 are two values used to distinguish the two different mules   
 c  : client( m1, m2);
 m1 : mule(1, c, p); 
 m2 : mule(2, c, p);
 p  : proxy(m1, m2, s);
 s  : server(p);
 
---        ** Properties to Check **        --
- 
--- reachability  property FALSE
---CTLSPEC
---EF(c.wallet < 0)
--- reachability  property TRUE
---CTLSPEC
---EF(m1.wallet = 50 & m2.wallet = 0)
--- liveness property FALSE
+--               ** Properties to Check **           --
+--                REACHABILITY PROPERTIES            --
+-- Correctness property. Client's wallet never goes under 0. -- TRUE
 CTLSPEC
-EF m1.Position = middle
+EF (c.wallet < 0) 
+-- Correctness property. Mule's wallet never goes > 0. -- TRUE
+CTLSPEC
+EF (m1.wallet > 50 | m2.wallet > 50)
+-- "Starvation", one of the mules never does a job. -- TRUE
+CTLSPEC
+EF (m1.wallet = 50 | m2.wallet = 50)
+--                  LIVENESS PROPERTIES              -- 
+-- The system isn't reactive due to the random walk of mules.
+-- For example, they can loop in middle zone, so they will
+-- never go into the client or proxy zone.
+ 
+-- When the client has a message to send, his request may not be heard -- FALSE
 CTLSPEC
 AG(c.state = request -> AF(c.state = according))
+-- Even in the best condition, the mule's request may not be heard -- FALSE
 CTLSPEC
 AG((c.state = request & c.safety = TRUE & m1.blacklist = FALSE & m2.blacklist = FALSE) -> AF(c.state = according))
--- liveness property FALSE
+-- When the proxy has a message to send, his request may not be heard  -- FALSE
 CTLSPEC
 AG(p.state = waitingMule -> AF(p.state = according))
+-- When the request is heard and the job assigned, the client 
+-- may not receive the reply due to random walks or message always lost. -- FALSE 
+CTLSPEC
+AG(c.state = waiting -> AF(c.state = response))
 
 ------------------------------ End Main------------------------------
 
@@ -44,9 +55,9 @@ VAR
 
 -- state null       : No message to send.
 -- state request    : Request to send a message. 
--- state according  : Arranging with the mule for the price of the mule work.
+-- state according  : Arranging with the mule for the  work.
 -- state waiting    : Message delivered to the mule. Wait for the answer. 
--- state response   : The mule have just deliver me the answer. 
+-- state response   : The mule have just deliver the answer to the client. 
 -- state payment    : Paying the mule for his work. 
 
 state  : {null, request, according, waiting, response, payment};
@@ -57,6 +68,8 @@ wallet : 0..50;
 --  <<Variable Choice contains the chosen mule id. >> 
 choice : 0..2;
 
+-- <<Variable safety contains the "safety" of the client's zone .
+-- If the zone isn't safe, there is a risk that the mule will lose the message. >>
 safety : boolean;
 
 
@@ -65,87 +78,88 @@ ASSIGN
 init(state)  := null;
 next(state)  :=
     case
-        wallet = 0 : null;
-        -- The client can have a messageState to send or not.
-        state = null : {null, request};
-        -- At least one mule is in the client's position.
-        (state = request) & (m1.Position = client | m2.Position = client) : according;
-        -- Mules always accept my request. I have choose a mule.
-        (safety = TRUE) & (state = according) & (choice != 0) : waiting;
-        -- Mules always accept my request. I haven't choose a mule.
-        (safety = TRUE) & (state = according) & (choice  = 0) : request;
-        -- m1 decision
-        (safety = FALSE) & (state = according) & (m1.id = choice)
+    	-- Checking if there are tokens in the client's wallet. 
+        wallet = 0     : null;
+        -- The client can have a message to send or not.
+        (state = null) : {null, request};
+        -- At least one mule is in the client's zone.
+        (state = request)   & (m1.position = client | m2.position = client) : according;
+        -- The client has given the job to a mule.
+        (state = according) & (safety = TRUE)  &  (choice != 0) : waiting;
+        -- The client hasn't choose a mule.
+        (state = according) & (safety = TRUE)  &  (choice  = 0) : request;
+        -- m1 decision.
+        (state = according) & (safety = FALSE) &  (m1.id = choice)
           : (m1.decision = accept) ? waiting : request;
-        -- m2 decision
-        (safety = FALSE) & (state = according) & (m2.id = choice)
+        -- m2 decision.
+        (state = according) & (safety = FALSE) &  (m2.id = choice)
           : (m2.decision = accept) ? waiting : request; 
-        -- I return in request when the messageState is lost  
+        -- The client returns in request when the message is lost. 
         (state = waiting) & ((m1.state = goingToP & m1.messageState = lost) | 
         (m2.state = goingToP & m2.messageState = lost))  : request;    
         -- The client received the response from the server.
-        (state = waiting) & (m1.state = goingToC & m1.Position = client) : response; 
-        (state = waiting) & (m2.state = goingToC & m2.Position = client) : response;
-        -- messageState sent to proxy.
+        (state = waiting) & (m1.state = goingToC & m1.position = client) : response; 
+        (state = waiting) & (m2.state = goingToC & m2.position = client) : response;
+        -- Message sent to proxy, the client pays the mule.
         (state = waiting ) & ((m1.state = deliverToP) | (m2.state = deliverToP)) : payment;  
-        -- response received,I pay the mule
-        state  = response : payment; 
-        -- Mule payed to deliver the messageState to proxy.
-        (state = payment) & (m1.state = wait & m1.Position = proxy) : waiting;   
-        (state = payment) & (m2.state = wait & m2.Position = proxy) : waiting;  
-        -- Mule payed to delivering the answer to client.
-        (state = payment) & (m1.state = wait & m2.Position = client) : null;
-        (state = payment) & (m1.state = wait & m2.Position = client) : null;
+        -- Response received, the client pays pay the mule.
+        (state  = response) : payment; 
+        -- Mule payed to deliver the message to proxy, the client returns to waiting.
+        (state = payment) & (m1.state = wait & m1.position = proxy) : waiting;   
+        (state = payment) & (m2.state = wait & m2.position = proxy) : waiting;  
+        -- Mule payed to delivering the answer to client, the client goes to null.
+        (state = payment) & (m1.state = wait & m1.position = client) : null;
+        (state = payment) & (m2.state = wait & m2.position = client) : null;
         TRUE : state;
     esac;
 
 init(wallet) := 50;
 next(wallet) :=
     case
+    	(wallet = 0) : 0;
         -- Given 1 token to the mule that has completed the job.
-        (wallet > 0) & (state  = payment) : wallet - 1;
-        wallet = 0 : 0;
+        (state  = payment) : wallet - 1;
         TRUE : wallet;
     esac;
 
 init(choice) := 0;
 next(choice) :=
     case
-        -- Client has to send a messageState but both mules aren't in his zone.
-        (state = request) & (m1.Position != client) & (m2.Position != client) : 0;
-        -- Client has to send a messageState and only m1 is in his position.
+        -- Client has to send a message but both mules aren't in his zone.
+        (state = request) & (m1.position != client) & (m2.position != client) : 0;
+        -- Client has to send a message and only m1 is in his position.
         -- m1 isn't in blacklist so client chooses him.
-        (state = request) & (m1.Position  = client) & (m1.blacklist = FALSE) 
-        & (m2.Position != client) : 1;
-        -- Client has to send a messageState and only m1 is in his position.
-        -- choice is non-deterministic.
-        (state = request) & (m1.Position  = client) & (m1.blacklist = TRUE)
-        & (m2.Position != client) : {0,1};       
-        -- Client has to send a messageState and only m2 is in his position.
+        (state = request) & (m1.position  = client) & (m1.blacklist = FALSE) 
+        & (m2.position != client) : 1;
+        -- Client has to send a message and only m1 is in his position.
+        -- m1 is in blacklist so choice is non-deterministic.
+        (state = request) & (m1.position  = client) & (m1.blacklist = TRUE)
+        & (m2.position != client) : {0,1};       
+        -- Client has to send a message and only m2 is in his position.
         -- m2 isn't in blacklist so client chooses him.
-        (state = request) & (m1.Position != client) & (m2.Position  = client) 
+        (state = request) & (m1.position != client) & (m2.position  = client) 
         & (m2.blacklist = FALSE) : 2;
-        -- Client has to send a messageState and only m2 is in his position.
-        -- choice is non-deterministic.
-		(state = request) & (m1.Position != client) & (m2.Position = client) 
+        -- Client has to send a message and only m2 is in his position.
+        -- m2 is in blacklist so choice is non-deterministic.
+		(state = request) & (m1.position != client) & (m2.position = client) 
 		& (m2.blacklist = TRUE)  : {0,2};               
-        -- Client has to send a messageState and both mules are in his zone.
-        -- m1 isn't in blacklist. 
-        (state = request) & (m1.Position  = client) & (m2.Position  = client)
+        -- Client has to send a message and both mules are in his zone.
+        -- m1 isn't in blacklist so client chooses him. 
+        (state = request) & (m1.position  = client) & (m2.position  = client)
         & (m1.blacklist = FALSE) & (m2.blacklist = TRUE) : 1;
-        -- Client has to send a messageState and both mules are in his zone.
-        -- m2 isn't in blacklist. 
-        (state = request) & (m1.Position  = client) & (m2.Position  = client)
+        -- Client has to send a message and both mules are in his zone.
+        -- m2 isn't in blacklist so client chooses him. 
+        (state = request) & (m1.position  = client) & (m2.position  = client)
         & (m1.blacklist = TRUE) & (m2.blacklist = FALSE) : 2;
-        -- Client has to send a messageState and both mules are in his zone.
-        -- Both aren't in blacklist. Choice is non-deterministic. 
-        (state = request) & (m1.Position  = client) & (m2.Position  = client)
+        -- Client has to send a message and both mules are in his zone.
+        -- Both mules aren't in blacklist. Choice is non-deterministic. 
+        (state = request) & (m1.position  = client) & (m2.position  = client)
         & (m1.blacklist = FALSE) & (m2.blacklist = FALSE) : {1,2};
-        -- Client has to send a messageState and both mules are in his zone.
+        -- Client has to send a message and both mules are in his zone.
         -- Both are in blacklist. Choice is non-deterministic.
-        (state = request) & (m1.Position  = client) & (m2.Position  = client)
+        (state = request) & (m1.position  = client) & (m2.position  = client)
         & (m1.blacklist = TRUE) & (m2.blacklist = TRUE) : {0,1,2};        
-        -- messageState lost.
+        -- message lost.
         (m1.messageState = lost) | (m2.messageState = lost) : 0;
         -- the job is done. 
         (state = payment) : 0;
@@ -155,7 +169,7 @@ next(choice) :=
 init(safety) := {TRUE, FALSE};
 next(safety) :=
     case
-    	-- when the customer pays for a job, the safety of the zone changes.
+    	-- When the client pays for a job, the safety of the zone changes.
 		(state = payment) : {TRUE, FALSE};
         TRUE : safety;
     esac;
@@ -173,24 +187,28 @@ VAR
 -- state walking     : Walking randomly waiting for a work. 
 -- state talkingToC  : Arranging with the client. 
 -- state talkingToP  : Arranging with the proxy.
--- state goingToP    : Travelling to deliver the messageState to proxy.
+-- state goingToP    : Travelling to deliver the message to proxy.
 -- state goingToC    : Travelling to deliver the response to client.
--- state deliverToP  : Delivering the messageState to proxy.
+-- state deliverToP  : Delivering the message to proxy.
 -- state deliverToC  : Delivering the response to client.
 -- state wait        : Waiting to get paid.
 
 state      : {walking, talkingToC, talkingToP, goingToP, goingToC, deliverToC, deliverToP, wait};
 
 --  <<Mule positions during the walk.>>  
-Position : {client, proxy, middle};
+position : {client, proxy, middle};
 
 --  <<Mule wallet (initialized with 0 tokens).>>  
 wallet : 0..50;
 
+-- <<State of the message to deliver.>>
 messageState : {null, lost, owned};
 
+-- <<Is the mule in blacklist?>>
 blacklist : boolean;
 
+-- <<When the  client isn't in safe zone, the mule decides if 
+-- accept the job or not.>>
 decision : {null, accept, refuse};
 
 ASSIGN
@@ -198,26 +216,26 @@ ASSIGN
 init(state) := walking;
 next(state) :=
     case
-        -- The client has a messageState to send.
-        (state = walking) & (Position = client) & (c.state = request)     : talkingToC;
-        -- The proxy has a response to send.
-        (state = walking) & (Position = proxy)  & (p.state = waitingMule) : talkingToP;
+        -- The client has a message to send and the mule is in his zone.
+        (state = walking) & (position = client) & (c.state = request)     : talkingToC;
+        -- The proxy has a response to send and the mule is in his zone.
+        (state = walking) & (position = proxy)  & (p.state = waitingMule) : talkingToP;
         -- Assignment of the job to mule. 
         (state = talkingToC) & (c.choice  = id) & (decision = accept)  : goingToP;
         (state = talkingToC) & (c.choice  = id) & (decision = refuse)  : walking;
         (state = talkingToC) & (c.choice != id)  : walking;
         (state = talkingToP) & (p.choice  = id)  : goingToC;
         (state = talkingToP) & (p.choice != id)  : walking;
-        -- When I lose the messageState, I go to "walking"
-        (messageState = lost) : walking;
+        -- When the mule loses the message, he goes to "walking"
+        (state = goingToP | state = goingToC) & (messageState = lost) : walking;
         -- Going to proxy.
-        (messageState = owned) & (state = goingToP) & (Position = client) : goingToP;
-        (messageState = owned) & (state = goingToP) & (Position = middle) : goingToP;
-        (messageState = owned) & (state = goingToP) & (Position = proxy)  : deliverToP;
+        (state = goingToP) & (messageState = owned) & (position = client) : goingToP;
+        (state = goingToP) & (messageState = owned) & (position = middle) : goingToP;
+        (state = goingToP) & (messageState = owned) & (position = proxy)  : deliverToP;
         -- Going to client.
-        (messageState = owned) & (state = goingToC) & (Position = proxy)  : goingToC;
-        (messageState = owned) & (state = goingToC) & (Position = middle) : goingToC;
-        (messageState = owned) & (state = goingToC) & (Position = client) : deliverToC;
+        (state = goingToC) & (messageState = owned) & (position = proxy)  : goingToC;
+        (state = goingToC) & (messageState = owned) & (position = middle) : goingToC;
+        (state = goingToC) & (messageState = owned) & (position = client) : deliverToC;
         -- Requesting to get paid.
         (state = deliverToP) | (state = deliverToC) : wait;
         -- Job Terminated.
@@ -226,33 +244,33 @@ next(state) :=
     esac;
 
 -- At the beginning the position is chosen non-deterministically. 
-init(Position) := {client, proxy, middle};
-next(Position) :=
+init(position) := {client, proxy, middle};
+next(position) :=
     case
         -- Walking randomly waiting for a job.
-        (state = walking)  & (Position = client) & (c.state != request) : {client, middle};
-        (state = walking)  & (Position = middle) : {client, middle, proxy};
-        (state = walking)  & (Position = proxy)  & (p.state != waitingMule) : {proxy, middle};
-        -- When I am not chosen, I am "kicked" from the client zone.
+        (state = walking)  & (position = client) & (c.state != request) : {client, middle};
+        (state = walking)  & (position = middle) : {client, middle, proxy};
+        (state = walking)  & (position = proxy)  & (p.state != waitingMule) : {proxy, middle};
+        -- When the mule isn't chosen, he's "kicked" from the client zone.
         (state = talkingToC) & (c.choice != id) : middle;
-        -- When I am not chosen, I am "kicked" from the proxy zone.
+        -- When the mule isn't chosen, he's "kicked" from the proxy zone.
         (state = talkingToP) & (p.choice != id) : middle;       
-        -- When I refuse the client, I go to middle zone.
+        -- When the mule refuses the client, he goes to middle zone.
         (state = talkingToC) & (decision = refuse) : middle;
         -- Going to proxy.
-        (state = goingToP) & (Position = client) : middle;
-        (state = goingToP) & (Position = middle) : proxy;
+        (state = goingToP) & (position = client) & (messageState = owned) : middle;
+        (state = goingToP) & (position = middle) & (messageState = owned) : proxy;
         -- Going to client.
-        (state = goingToC) & (Position = proxy)  : middle;
-        (state = goingToC) & (Position = middle) : client;
+        (state = goingToC) & (position = proxy)  & (messageState = owned) : middle;
+        (state = goingToC) & (position = middle) & (messageState = owned) : client;
      
-        TRUE : Position;
+        TRUE : position;
     esac;
 
 init(wallet) := 0;
 next(wallet) :=
     case
-    	-- I can't earn anymore
+    	-- the mule can't earn anymore
     	(wallet = 50)  : 50;
         -- Earned a token for have completed the job.
         (c.state = payment) : wallet + 1;
@@ -262,33 +280,33 @@ next(wallet) :=
 init(messageState) := null;
 next(messageState) :=
     case
-    	-- when I lose the messageState, the status returns null.
+    	-- When the mule loses the message, the status returns null.
     	(messageState = lost) : null;
-    	-- when the mule accepts the client and he chose the mule, the messageState becomes "owned".
+    	-- When the mule accepts the client and he chooses the mule, the messageState becomes "owned".
 		(state = talkingToC) & (c.choice = id) & (decision = accept) : owned;
-		-- when the mule refuses the client, the messageState remains "null".
+		-- When the mule refuses the client, the messageState remains "null".
 		(state = talkingToC) & (c.choice = id) & (decision = refuse) : null;
-		-- when the client refuses the mule, the messageState remains "null".
+		-- When the client refuses the mule, the messageState remains "null".
 		(state = talkingToC) & (c.choice != id) : null;
-		-- during safety mode, in client's zone, there is no risk of losing the messageState.
-		(c.safety = TRUE)  & (state = goingToP) & (Position = client) : owned;
-		-- when the client isn't in safety mode, there is the risk of losing the
-		-- messageState in Client's zone.
-		(c.safety = FALSE) & (state = goingToP) & (Position = client) : {lost, owned};	
-		-- in "middle" zone there is always the risk of losing the messageState.
-		(messageState = owned) & (state = goingToP) & (Position = middle) : {lost, owned};
-		-- messageState delivered to proxy, messageState goes to "null".
+		-- During safety mode, in client's zone, there is no risk of losing the message.
+		(c.safety = TRUE)  & (state = goingToP) & (position = client) : owned;
+		-- When the client isn't in safety mode, there is the risk of losing the
+		-- message in Client's zone.
+		(c.safety = FALSE) & (state = goingToP) & (position = client) : {lost, owned};	
+		-- In "middle" zone there is always the risk of losing the message.
+		(messageState = owned) & (state = goingToP) & (position = middle) : {lost, owned};
+		-- Message delivered to proxy, messageState goes to "null".
 		(state = deliverToP)  : null;
-		-- the proxy has instructed the mule to deliver the reply.
+		-- The proxy has instructed the mule to deliver the reply.
 		(state = talkingToP) & (p.choice = id) : owned;
-		-- in "middle" zone there is always the risk of losing the messageState.
-		(messageState = owned) & (state = goingToC) & (Position = proxy) : {lost, owned};
-		-- during safety mode, in client's zone, there is no risk of losing the messageState.
-        (c.safety = TRUE)  & (state = goingToC) & (Position = middle) : owned;
-        -- when the client isn't in safety mode, there is the risk of losing the
-		-- messageState in Client's zone.
-		(c.safety = FALSE) & (state = goingToC) & (Position = middle) : {lost, owned};	
-		-- response delivered to client					
+		-- In "middle" zone there is always the risk of losing the message.
+		(messageState = owned) & (state = goingToC) & (position = proxy) : {lost, owned};
+		-- During safety mode, in client's zone, there is no risk of losing the message.
+        (c.safety = TRUE)  & (state = goingToC) & (position = middle) : owned;
+        -- When the client isn't in safety mode, there is the risk of losing the
+		-- message in Client's zone.
+		(c.safety = FALSE) & (state = goingToC) & (position = middle) : {lost, owned};	
+		-- Response delivered to client					
 		(state = deliverToC) : null;	
         TRUE : messageState;
     esac;
@@ -296,27 +314,29 @@ next(messageState) :=
 init(blacklist) := FALSE;
 next(blacklist) :=
     case
-		-- when i lose the messageState, i go to the blacklist.
+		-- When the mule loses the message, he goes to the blacklist.
 		(messageState = lost) : TRUE;
-		-- when the proxy receives the messageState or the customer receives the reply,
-		-- I leave the blacklist.
-		(p.state = messageState) | (c.state = response) : TRUE;
+		-- When the proxy receives the message or the client receives the reply,
+		-- The mule leaves the blacklist.
+		(p.state = message) | (c.state = response) : TRUE;
         TRUE : blacklist;
     esac;
 
 init(decision) := null;
 next(decision) :=
     case
-    	-- I accept the client's request when he's in safety mode. 
-    	(Position = client) & (c.state = request) & (c.safety = TRUE)  : accept;
-    	-- when the client isn't in safety mode, the choice is non-deterministic 
-    	(Position = client) & (c.state = request) & (c.safety = FALSE) : {refuse, accept};
+    	-- The mule accepts the client's request when he's in safety mode. 
+    	(position = client) & (c.state = request) & (c.safety = TRUE)  : accept;
+    	-- When the client isn't in safety mode, the choice is non-deterministic 
+    	(position = client) & (c.state = request) & (c.safety = FALSE) : {refuse, accept};
     	-- conditions in which the decision returns null :
-    	-- 1) messageState lost.
+    	-- 1) message lost.
     	(state = goingToP) & (messageState = lost) : null;
-    	-- 2) I was not chosen by the client
+    	-- 2) the mule wasn't chosen by the client
     	(state = talkingToC) & (c.choice != id) : null;
-    	-- 3) messageState delivered
+    	-- 3) the mule refuses the client
+    	(state = talkingToC) & (decision = refuse) : null;  
+    	-- 4) message delivered
 		(state = deliverToP) : null;
         TRUE : decision;
     esac;
@@ -331,9 +351,9 @@ VAR
 -- state null        : Waiting for a message. 
 -- state message     : A mule just handed a message. 
 -- state forward     : Forwarding the message to the server. 
--- state wait        : Waiting to recive the server response to deliver.
+-- state wait        : Waiting to receive the server response to deliver.
 -- state response    : The server just handed a response.
--- state waitingMule : Waiting for a mule to deliver the serever response.
+-- state waitingMule : Waiting for a mule to deliver the server response.
 -- state according   : Arranging with the mule to deliver the answer.
 
 state  : {null, message, forward, wait, response, waitingMule, according};
@@ -346,19 +366,19 @@ ASSIGN
 init(state) := null;
 next(state) :=
     case
-        -- Received the message.
-        (state = null) & (m1.state = goingToP & m1.Position = proxy) : message;
-        (state = null) & (m2.state = goingToP & m2.Position = proxy) : message;
+        -- The proxy Received the message.
+        (state = null) & (m1.state = goingToP & m1.position = proxy) : message;
+        (state = null) & (m2.state = goingToP & m2.position = proxy) : message;
         (state = message) : forward;
         (state = forward) : wait;
         (state = wait)    : response;
         (state = response) : waitingMule;
         -- Waiting to deliver the response to a mule.
-        (state = waitingMule) & (m1.Position != proxy & m2.Position != proxy) : waitingMule;
-        (state = waitingMule) & (m1.Position  = proxy | m2.Position  = proxy) : according;
+        (state = waitingMule) & (m1.position != proxy & m2.position != proxy) : waitingMule;
+        (state = waitingMule) & (m1.position  = proxy | m2.position  = proxy) : according;
         -- Returning to waiting for a message.
         (state = according) : null;  
-        -- message lost, I have to send again the response.
+        -- Message lost, the proxy has to send again the response.
         (m1.state = goingToC & m1.messageState = lost) : waitingMule;
         (m2.state = goingToC & m2.messageState = lost) : waitingMule;        
         TRUE : state;
@@ -367,16 +387,16 @@ next(state) :=
 init(choice) := 0;
 next(choice) :=
     case
-        -- Waiting to send a response but both mules aren't in his zone.
-        (state = waitingMule) & (m1.Position != proxy) & (m2.Position != proxy) : 0;
-        -- Waiting to send a response to mule 1.
-        (state = waitingMule) & (m1.Position  = proxy) & (m2.Position != proxy) : 1;
-        -- Waiting to send a response to mule 2.
-        (state = waitingMule) & (m1.Position != proxy) & (m2.Position  = proxy) : 2;
-        -- Waiting to send a response but both mules are in zone. The assignment choice is non-deterministic.
-        (state = waitingMule) & (m1.Position  = proxy) & (m2.Position  = proxy) : {1,2};
+        -- Waiting to send a response but both mules aren't in proxy's zone.
+        (state = waitingMule) & (m1.position != proxy) & (m2.position != proxy) : 0;
+        -- m1 is in proxy's zone while he's waiting a mule.
+        (state = waitingMule) & (m1.position  = proxy) & (m2.position != proxy) : 1;
+        -- m2 is in proxy's zone while he's waiting a mule.
+        (state = waitingMule) & (m1.position != proxy) & (m2.position  = proxy) : 2;
+        -- Waiting to send the response but both mules are in zone. The assignment choice is non-deterministic.
+        (state = waitingMule) & (m1.position  = proxy) & (m2.position  = proxy) : {1,2};
         -- message lost
-        (m1.state = goingToC | m2.state = goingToC) & (m1.messageState = lost) | (m2.messageState = lost) : 0; 
+        (m1.state = goingToC | m2.state = goingToC) & (m1.messageState = lost | m2.messageState = lost) : 0; 
         -- job terminated.
         (m1.state = wait) | (m2.state = wait) : 0;
         TRUE : choice;
