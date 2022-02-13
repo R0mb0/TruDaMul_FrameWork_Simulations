@@ -179,25 +179,15 @@
 \subsection{Flusso di lavoro}
 	\begin{enumerate}
 	\item All'inizio i Muli camminano casualmente tra il Client ed il Proxy, in attesa che qualcuno abbia bisogno di loro per consegnare un messaggio.
-	
 	\item Se il Client ha bisogno di un Mulo per mandare un messaggio, entra nella modalità di richiesta, rimanendo in attesa di un Mulo a cui poter affidare il messaggio.
-	
-	\item Quando un Mulo raggiunge la zona del Client, controlla se quest'ultimo vuole inoltrare un messaggio, nel caso in cui la risposta è positiva può iniziare la fase di scambio, dove il Client paga il Mulo consegnandoli il messaggio da inoltrare al Proxy.
-	
-	\item Il Mulo cammina in maniera causale fino al raggiungimento del Proxy.
-	
+	\item Quando un Mulo raggiunge la zona del Client, controlla se quest'ultimo vuole inoltrare un messaggio, nel caso in cui il controllo è positivo può iniziare la fase di scambio, dove il Client paga il Mulo consegnandoli il messaggio da inoltrare al Proxy.
+	\item Il Mulo cammina fino al raggiungimento del Proxy.
 	\item Il Mulo consegna il messaggio al Proxy e successivamente ricomincia a muoversi casualmente tra il Proxy ed il Client.
-	
 	\item Quando il Proxy riceve il messaggio, lo inoltra al Server e attende una risposta da quest'ultimo .
-	
 	\item Quando il Server riceve un messaggio dal Proxy, inizia a elaborare una risposta da dover inoltrare a quest'ultimo.
-	
 	\item Quando il Proxy ha ricevuto la risposta dal Server entra in modalità richiesta, attendendo il passaggio  di un Mulo a cui poter inoltrare la risposta da dover consegnare al Client. 
-	
-	\item Una volta che il Mulo è nella zona del Proxy, controlla se quest'ultimo ha un messaggio da inviare al Client, se la risposta è affermativa, allora il mulo si prendere carico della risposta da consegnare al Client. 
-	
-	\item Il Mulo continua a muoversi in maniera causale fino a raggiungere la zona del Client. 
-	
+	\item Una volta che il Mulo è nella zona del Proxy, controlla se quest'ultimo ha un messaggio da inviare al Client, se il controllo è positivo allora il mulo si prendere carico della risposta da consegnare al Client. 
+	\item Il Mulo cammina fino a raggiungere la zona del Client. 
 	\item A questo punto il Client paga il Mulo per poter vedere la risposta.
 	\end{enumerate}
 
@@ -421,9 +411,28 @@ Il caso base si compone dei seguenti attori:
 
 \subsection{Test implementati}
 \begin{itemize}
-	\item È stato implementato un test per verificare che la richiesta del Client venga sempre soddisfatta dai Muli.
-	\item È stato implementato un test per verificare che la richiesta del Proxy venga sempre soddisfatta dai Muli.
-	\item È stato implementato un testo per verificare che la richiesta del Client venga sempre soddisfatta dai Muli che non sono stati inseriti nella "balck list"
+	\item È stato implementato il test per verificare se entrambi i Muli possiedono il messaggio nello stesso momento.\\
+	Il risultato dimostra che questa condizione non può accadere poiché il messaggio viene affidato ad un solo Mulo alla volta.
+	\item È stato implementato il test per verificare se il portafoglio del Client può andare in negativo.\\
+	Il risultato dimostra che non è possibile perché quando il portafoglio del Client ha raggiunto la quota di zero, non può più fare richieste di spedire un messaggio.
+	\item È stato implementato il test per verificare se il portafoglio del Mulo può superare il valore di 50.\\
+	Il risultato dimostra che questo non è possibile in quanto il Client ha una disponibilità di 50 monete con cui spedire i messaggi. 
+	\item È stato implementato il test per verificare se il portafoglio di un mulo è pieno e il portafoglio dell'altro mulo è vuoto. \\
+	Il risultato dimostra che questa condizione è possibile solo nel caso in cui un Mulo venga sempre assoldato. (situazione di "fairness")
+	\item  È stato implementato il test per verificare se entrambi i Muli stanno camminando verso il Client per consegnarli la risposta.\\
+	Il risultato dimostra che questa condizione non può accadere poiché il messaggio viene affidato ad un solo Mulo alla volta.
+	\item  È stato implementato il test per verificare se entrambi i Muli stanno camminando verso il Proxy per consegnarli la risposta.\\
+	Il risultato dimostra che questa condizione non può accadere poiché il messaggio viene affidato ad un solo Mulo alla volta.
+	\item È stato implementato il test per verificare se  il Client abbia sempre prima o poi un messaggio da inviare.\\
+	Il risultato dimostra che questa condizione non può accadere poiché il Client può finire i soldi oppure non avere un messaggio.
+	\item È stato implementato il test per verificare se  una volta che il Mulo ha consegnato il messaggio, di conseguenza il Mulo ritorna a camminare in modo causale in cerca di un nuovo lavoro.\\
+	Il risultato dimostra che il Mulo viene sempre pagato ogni volta che portato a termine il lavoro, quindi può ricominciare a camminare in modo causale in cerca di un nuovo lavoro.
+	\item È stato implementato il test per verificare che quando il Client ha un messaggio da inviare, allora ci sarà sempre un Mulo con cui accordarsi.\\
+	Il risultato dimostra che questa condizione è falsa in quanto i Muli potrebbero non arrivare mai nella zona del Client, in quanto i Muli camminano in modo casuale.
+	\item È stato implementato il test per verificare se, anche nelle migliori condizioni (quando il Client è nella zona sicura e i Muli non sono nella "Black list")
+	
+	
+
 \end{itemize}
 	
 	\end{document}
