@@ -27,7 +27,7 @@ Urbino`s University - Applied computer science - Programming languages and softw
 15. If the Mule reach the Client's zone with the message, the mule delivers the answer to Client and come back to be 'white listed', after, the Client pays the Mule, at the end the Mule returns to walk randomly.
 
 ### Properties implemented:
-- If Both the Mules hahe the message in the same moment.
+- If Both the Mules have the message in the same moment.
 - If the Client's wallet can have negative value.
 - If the Mule's wallet can exceed the value of 50.
 - If a Mule's wallet can reach a value of 50 and the other Mule's wallet remain at 0.
