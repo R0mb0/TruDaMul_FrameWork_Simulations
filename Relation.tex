@@ -429,10 +429,16 @@ Il caso base si compone dei seguenti attori:
 	Il risultato dimostra che il Mulo viene sempre pagato ogni volta che portato a termine il lavoro, quindi può ricominciare a camminare in modo causale in cerca di un nuovo lavoro.
 	\item È stato implementato il test per verificare che quando il Client ha un messaggio da inviare, allora ci sarà sempre un Mulo con cui accordarsi.\\
 	Il risultato dimostra che questa condizione è falsa in quanto i Muli potrebbero non arrivare mai nella zona del Client, in quanto i Muli camminano in modo casuale.
-	\item È stato implementato il test per verificare se, anche nelle migliori condizioni (quando il Client è nella zona sicura e i Muli non sono nella "Black list")
-	
-	
-
+	\item È stato implementato il test per verificare se, anche nelle migliori condizioni (quando il Client è nella zona sicura e i Muli non sono nella "Black list"), quando il Client ha un messaggio da inviare, allora ci sarà sempre un Mulo con cui accordarsi.\\
+	Il risultato dimostra che questa condizione è falsa in quanto i Muli potrebbero non arrivare mai nella zona del Client, in quanto i Muli camminano in modo casuale.
+	\item È stato implementato il test per verificare che quando il Proxy ha un messaggio da inviare, allora ci sarà sempre un Mulo con cui accordarsi.\\
+	Il risultato dimostra che questa condizione è falsa in quanto i Muli potrebbero non arrivare mai nella zona del Proxy, in quanto i Muli camminano in modo casuale.
+	\item È stato implementato il test per verificare se il Client (dopo aver inviato un messaggio) è in attesa di ricevere una risposta, allora riceverà sempre una risposta.\\
+	Il risultato dimostra che questa condizione è falsa in quanto i Muli potrebbero non arrivare mai nella zona del Proxy a ritirare la risposta da consegnare al Client, in quanto i Muli camminano in modo casuale.
+	\item È stato implementato il test per verificare se quando il Proxy ha inoltrato il messaggio al Server, il Server risponde sempre al Proxy.\\
+	Il risultato dimostra che questa condizione è vera in quanto per costruzione il Server risponde sempre al Proxy.
+	\item È stato implementato il test per verificare che quando il Mulo entra nello stato di consegna del messaggio, non ha perso quest'ultimo.\\
+	Il risultato dimostra che questa condizione è vera in quanto il Mulo non può entrare nello stato di consegna del messaggio se prima il messaggio è stato perso. 
 \end{itemize}
 	
 	\end{document}
