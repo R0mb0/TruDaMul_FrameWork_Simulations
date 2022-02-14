@@ -277,7 +277,7 @@ Il caso base si compone dei seguenti attori:
 		\end{itemize}
 	\item Una variabile "MessageState" che può assumere i seguenti valori:
 	\begin{itemize}
-		\item "Null" se il Mulo non ha ancora ritirato un messaggio.
+		\item "Null" se il Mulo non ha ancora un messaggio.
 		\item "Lost" se il Mulo ha perso il messaggio.
 		\item "Owned" se il Mulo possiede ancora il messaggio e non l'ha ancora consegnato. 
 	\end{itemize}
@@ -312,7 +312,7 @@ Il caso base si compone dei seguenti attori:
 		\item Inizialmente la variabile è inizializzata nello stato "Null" siccome il Mulo non ha prelevato ancora nessun messaggio.
 		\item Se il Mulo accetta il lavoro proposto dal Client e se il Client  accetta il Mulo, allora lo stato della variabile diventa "Owned".
 		\item Se il Mulo non accetta il lavoro proposto dal Client, oppure se il Client non accetta il Mulo,  la variabile rimane nello stato "Null".
-		\item Se il Mulo si trova in corrispondenza di una zona poco sicura, c`è il pericolo che il mulo perda il messaggio (se se si dirige verso la zone poco sicura e sia nel caso in cui dovesse provenire), in questo caso la variabile potrebbe assumere il valore "Lost" non deterministicamente.
+		\item Se il Mulo si trova in corrispondenza di una zona poco sicura, c`è il pericolo che il Mulo perda il messaggio (se se si dirige verso la zone poco sicura e sia nel caso in cui dovesse provenire), in questo caso la variabile potrebbe assumere il valore "Lost" non deterministicamente.
 		\item Se il Mulo si trova all'interno della zona a metà tra il Client ed il Proxy, c'è pericolo che perda il messaggio, in questo caso la variabile potrebbe assumere il valore "Lost" non deterministicamente..
 		\item una volta che il messaggio è stato consegnato la variabile torna al valore "Null".
 	\end{itemize}
@@ -329,7 +329,7 @@ Il caso base si compone dei seguenti attori:
 		\item A termine della parte di scelta, la variabile ritorna a valere "Null".
 	\end{itemize}
 	\end{itemize}
-	Il compito dei Muli è  quello di mettere in comunicazione il Client con il Proxy e vice versa, questa cosa la fanno grazie alla loro capacità di prendere un messaggio e di consegnarlo al destinatario. I Muli si muovono casualmente tra il Client ed il Proxy, in attesa di ricevere un messaggio da consegnare. I Muli si fanno pagare per il loro lavoro esclusivamente dal Client; infatti il Mulo si fa pagare dal Client prima di ritirare un messaggio da consegnare e nel caso in cui il mulo consegni al Client una risposta data dal Server, il Client dovrà pagare il mulo per poter vedere la risposta.
+	Il compito dei Muli è  quello di mettere in comunicazione il Client con il Proxy e vice versa, questa cosa la fanno grazie alla loro capacità di prendere un messaggio e di consegnarlo al destinatario. I Muli si muovono casualmente tra il Client ed il Proxy, in attesa di ricevere un messaggio da consegnare. I Muli si fanno pagare per il loro lavoro esclusivamente dal Client; infatti il Mulo si fa pagare dal Client per consegnare un messaggio  e nel caso in cui il Mulo consegni al Client una risposta data dal Server.
 	
 	
 	\item Il Proxy che è in grado di comunicare soltanto con i Muli e con il Server è composto dai seguenti elementi: 
