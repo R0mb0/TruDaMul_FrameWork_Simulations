@@ -38,7 +38,7 @@ State channels have been introduced to provide rapid DLT payments without the ne
 
 - Closing Channel - Both U or V can close the state channel at any time. The corresponding Smart Contract method needs the copy of the last balance message exchanged and the signature of both parties. Finally, the balance value is deducted from U`s deposit in favor of V, while the remaining part is sent to U.  
 
-![Example:](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/BackGround_and_Related_Work.png)
+![Example:](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/Scheme.png)
 
 #### 3.Decentralized File Storages and Content Addressing.  
 Decentralized File Storages (DFS) enable a content-based addressing approach, where the users, rather than establishing a connection with a Server, query the network asking for specific items.  
