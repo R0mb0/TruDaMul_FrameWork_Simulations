@@ -40,8 +40,4 @@ Urbino`s University - Applied computer science - Programming languages and softw
 -  If the Proxy is waiting a Mule, then its request will be examined by a Mule. 
 -  If the Client is in the waiting mode, then it will receive the response.
 -  If the Proxy forwards the message to the Server, then it will receive the response from the server. 
--  If the Mule is delivering the message, hence it has the message. 
-
-## Autors 
-- Francesco Rossi #298356
-- Francesco Rombaldoni #306249
+-  If the Mule is delivering the message, hence it has the message.
