@@ -30,7 +30,3 @@ The aim is to provide a very base working implementation of the framework from w
 - If the Client's wallet can have a negative value.
 - If during the esecution always a Mule will be selected to deliver the Client's messages.
 - If the Client's request can remain unheard by the Mules.
-
-## Autors 
-- Francesco Rossi #298356
-- Francesco Rombaldoni #306249
