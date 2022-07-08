@@ -1,7 +1,3 @@
-------------------------------  ------------------------------
---        **  **        --
---  <<>>  
-
 -- TruDaMul Framework base implementation with base properties to check.
 
 ------------------------------ Begin Main ------------------------------
@@ -18,28 +14,27 @@ s  : server(p);
 
 --               ** Properties to Check **           --
 --                REACHABILITY PROPERTIES 
--- Correctness property. The message can't be owned by both mule. -- FALSE
+-- Correctness property. The message can't be owned by both mule. | FALSE
 CTLSPEC
-EF (m1.messageState = owned & m2.messageState = owned)            --
--- Correctness property. Client's wallet never goes under 0. -- FALSE
+EF (m1.messageState = owned & m2.messageState = owned)
+-- Correctness property. Client's wallet never goes under 0. | FALSE
 CTLSPEC
 EF (c.wallet < 0) 
--- Correctness property. Mule's wallet never goes > 0. -- FALSE
+-- Correctness property. Mule's wallet never goes > 0. | FALSE
 CTLSPEC
 EF (m1.wallet > 50 | m2.wallet > 50)
--- "Fairness", one of the mules never does a job. -- TRUE
+-- "Fairness", one of the mules never does a job. | TRUE
 CTLSPEC
 EF (m1.wallet = 50 & m2.wallet = 0)
--- Both mules cannot be given the same job -- FALSE
+-- Both mules cannot be given the same job | FALSE
 CTLSPEC
 EF (m1.state = goingToC & m2.state = goingToC)
 CTLSPEC
 EF (m1.state = goingToP & m2.state = goingToP)
--- the client from a certain point on could not have more messages to send,
--- so this property is FALSE 
+-- the client from a certain point on could not have more messages to send. | FALSE
 CTLSPEC
 AG AF (c.state = request)
--- when the mule finishes a job, he  always get paid --TRUE
+-- when the mule finishes a job, he  always get paid. | TRUE
 CTLSPEC
 AG((m1.state = deliverToP | m1.state = deliverToC) -> AF(m1.state = walking))
 
@@ -48,24 +43,22 @@ AG((m1.state = deliverToP | m1.state = deliverToC) -> AF(m1.state = walking))
 -- For example, they can loop in middle zone, so they will
 -- never go into the client or proxy zone.
  
--- When the client has a message to send, his request may not be heard -- FALSE
+-- When the client has a message to send, his request may not be heard. | FALSE
 CTLSPEC
 AG(c.state = request -> AF(c.state = according))
--- Even in the best condition, the mule's request may not be heard -- FALSE
+-- Even in the best condition, the mule's request may not be heard. | FALSE
 CTLSPEC
 AG((c.state = request & c.safety = TRUE & m1.blacklist = FALSE & m2.blacklist = FALSE) -> AF(c.state = according))
--- When the proxy has a message to send, his request may not be heard  -- FALSE
+-- When the proxy has a message to send, his request may not be heard. | FALSE
 CTLSPEC
 AG(p.state = waitingMule -> AF(p.state = according))
--- When the request is heard and the job assigned, the client 
--- may not receive the reply due to random walks or message always lost. -- FALSE 
+-- When the request is heard and the job assigned, the client may not receive the reply due to random walks or message always lost. | FALSE 
 CTLSPEC
 AG(c.state = waiting -> AF(c.state = response))
--- when the proxy forwards the message to the server, it always receives the reply.
--- TRUE
+-- when the proxy forwards the message to the server, it always receives the reply. | TRUE
 CTLSPEC
 AG(p.state = forward -> AF(p.state = response))
--- When the message is deliver, the message was not lost -- TRUE
+-- When the message is deliver, the message was not lost. | TRUE
 CTLSPEC
 AG((m1.state = deliverToP | m1.state = deliverToC) -> m1.messageState = owned)
 
@@ -154,15 +147,15 @@ next(choice) :=
         (state = request) & (m1.position != client) & (m2.position != client) : 0;
         -- Client has to send a message and only m1 is in his position.
         -- m1 isn't in blacklist so client chooses him.
-        (state = request) & (m1.position  = client) & (m1.blacklist = FALSE) 
+        (state = request) & (m1.position = client) & (m1.blacklist = FALSE) 
         & (m2.position != client) : 1;
         -- Client has to send a message and only m1 is in his position.
         -- m1 is in blacklist so choice is non-deterministic.
-        (state = request) & (m1.position  = client) & (m1.blacklist = TRUE)
+        (state = request) & (m1.position = client) & (m1.blacklist = TRUE)
         & (m2.position != client) : {0,1};       
         -- Client has to send a message and only m2 is in his position.
         -- m2 isn't in blacklist so client chooses him.
-        (state = request) & (m1.position != client) & (m2.position  = client) 
+        (state = request) & (m1.position != client) & (m2.position = client) 
         & (m2.blacklist = FALSE) : 2;
         -- Client has to send a message and only m2 is in his position.
         -- m2 is in blacklist so choice is non-deterministic.
@@ -170,7 +163,7 @@ next(choice) :=
 		& (m2.blacklist = TRUE)  : {0,2};               
         -- Client has to send a message and both mules are in his zone.
         -- m1 isn't in blacklist so client chooses him. 
-        (state = request) & (m1.position  = client) & (m2.position  = client)
+        (state = request) & (m1.position = client) & (m2.position = client)
         & (m1.blacklist = FALSE) & (m2.blacklist = TRUE) : 1;
         -- Client has to send a message and both mules are in his zone.
         -- m2 isn't in blacklist so client chooses him. 
@@ -405,7 +398,7 @@ next(state) :=
         (state = response) : waitingMule;
         -- Waiting to deliver the response to a mule.
         (state = waitingMule) & (m1.position != proxy & m2.position != proxy) : waitingMule;
-        (state = waitingMule) & (m1.position  = proxy | m2.position  = proxy) : according;
+        (state = waitingMule) & (m1.position = proxy | m2.position = proxy) : according;
         -- Returning to waiting for a message.
         (state = according) : null;  
         -- Message lost, the proxy has to send again the response.
@@ -420,11 +413,11 @@ next(choice) :=
         -- Waiting to send a response but both mules aren't in proxy's zone.
         (state = waitingMule) & (m1.position != proxy) & (m2.position != proxy) : 0;
         -- m1 is in proxy's zone while he's waiting a mule.
-        (state = waitingMule) & (m1.position  = proxy) & (m2.position != proxy) : 1;
+        (state = waitingMule) & (m1.position = proxy) & (m2.position != proxy) : 1;
         -- m2 is in proxy's zone while he's waiting a mule.
-        (state = waitingMule) & (m1.position != proxy) & (m2.position  = proxy) : 2;
+        (state = waitingMule) & (m1.position != proxy) & (m2.position = proxy) : 2;
         -- Waiting to send the response but both mules are in zone. The assignment choice is non-deterministic.
-        (state = waitingMule) & (m1.position  = proxy) & (m2.position  = proxy) : {1,2};
+        (state = waitingMule) & (m1.position = proxy) & (m2.position = proxy) : {1,2};
         -- message lost
         (m1.state = goingToC | m2.state = goingToC) & (m1.messageState = lost | m2.messageState = lost) : 0; 
         -- job terminated.
