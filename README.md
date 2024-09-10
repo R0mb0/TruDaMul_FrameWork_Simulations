@@ -2,7 +2,7 @@ Urbino`s University - Applied computer science - Programming languages and softw
 
 # Basic Implementation of TruDaMul Framework.
 
-# Simple Definiction of TruDaMul Framework.  
+# Simple Definition of TruDaMul Framework.  
 
 ## TruDaMul Framework Targhet.
 
