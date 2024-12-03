@@ -17,7 +17,6 @@ Some dislocated areas, however, are underprivileged in the provision of such sma
 The TruDaMul Framework is able to carry data from an offline source to an online destination, relying on an untrusted Data Mule to carry the message through the two areas.  
 In particular the Framework enables communication between different actors and a reward mechanism for their work, based on the use of Distributed Ledger Technologies, Smart Contracts and Decentralized File Storages.  
 
-
 ### TruDaMul Requirements
 
 #### Data Mules
@@ -64,7 +63,7 @@ The simplest TruDaMul case is composed of:
 
 - Two Data Mules (M) that can bring the Client message to Proxy.  
 
-##### Interaction Example
+#### Interaction Example
 
 A Client (C) that finds itself in an offline condition (e.g. it is in a no broadband connection area), to send a message to a Server (S) that is online, uses one of two Data Mules (M), which takes care of retrieving (offline) the payload of C and forwarding it to a Proxy (P), which in turn forwards (online) the message to the Server (S). P then sends back a possible response through another (or
 possibly the same) Mule.  
@@ -75,10 +74,10 @@ possibly the same) Mule.
 
 2. Then C transmits to M1 the following objects:
 
-	- The payload pC.  
-	- A tender object, signed by C.  
-	- A balance object, signed by C, that updates the balance between C and M1 in their state channel.  
-	- A address signed by C.  
+    - The payload pC.  
+    - A tender object, signed by C.  
+    - A balance object, signed by C, that updates the balance between C and M1 in their state channel.  
+    - A address signed by C.  
 
 4. Once M1 becomes online, it can directly announce the tender using the tender signed by C, in order to reach an audience of Proxie. This process happens in a dedicated announcement service.  
 
@@ -86,16 +85,16 @@ possibly the same) Mule.
 
 6. The Proxy P, after checking the integrity of the tender signed by C, decides to take charge of it, simply uses a method from the TruDaMul Smart Contract owned by C. The submitTender method:  
 
-	- Requires as parameters:
+    - Requires as parameters:
  
-		- The tender object.  
-		- The signature of tender.  
-		- Address.  
-		- And the signature of address.  
+        - The tender object.  
+        - The signature of tender.  
+	- Address.  
+	- And the signature of address.  
 
-	- Automatically checks the validity of the signatures and locks the amount of money indicated by C in tender in favor of P.  
+    - Automatically checks the validity of the signatures and locks the amount of money indicated by C in tender in favor of P.  
 
-	- Allows M1 to close the state channel with C in the future, using the current balanceM1 object.  
+    - Allows M1 to close the state channel with C in the future, using the current balanceM1 object.  
 
 7. P sends a signed request to the decentralized authorization service for accessing.
 
@@ -123,7 +122,6 @@ possibly the same) Mule.
 
 The scope of this work is create a basic Implementation of "TruDaMul" framework, implementing the simplest TruDaMul case but simplifying the actors interactions.  
 Later the implementation creates a specific test to check the system proprieties, for example protocol errors.  
-
 
 ### Project Credits
 Mirko Zichichi<sup> * +</sup>, Luca Serena <sup> +</sup>, Stefano Ferretti<sup> #</sup>, Gabriele D’Angelo<sup> +</sup>  
@@ -172,7 +170,7 @@ The aim is to provide a very base working implementation of the framework from w
 - If when the Mule has delivered the message, then will come back to walk randomly.
 - If the Client is in the request mode, then its request will be examined by a Mule. 
 - If the Client is in the request mode, the Client is into the safe zone and both the Mules aren't listed into the "black list",then the Client's request will be examined by a Mule.
--  If the Proxy is waiting a Mule, then its request will be examined by a Mule. 
--  If the Client is in the waiting mode, then it will receive the response.
--  If the Proxy forwards the message to the Server, then it will receive the response from the server. 
--  If the Mule is delivering the message, hence it has the message.
+- If the Proxy is waiting a Mule, then its request will be examined by a Mule. 
+- If the Client is in the waiting mode, then it will receive the response.
+- If the Proxy forwards the message to the Server, then it will receive the response from the server. 
+- If the Mule is delivering the message, hence it has the message.
