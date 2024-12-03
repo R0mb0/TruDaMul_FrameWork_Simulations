@@ -87,10 +87,13 @@ possibly the same) Mule.
 
     - Requires as parameters:
  
-        - The tender object.  
-        - The signature of tender.  
-	- Address.  
-	- And the signature of address.  
+        - The tender object.
+            
+        - The signature of tender.
+          
+        - Address.
+          
+        - And the signature of address.  
 
     - Automatically checks the validity of the signatures and locks the amount of money indicated by C in tender in favor of P.  
 
