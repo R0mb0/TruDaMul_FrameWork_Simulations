@@ -177,3 +177,9 @@ The aim is to provide a very base working implementation of the framework from w
 - If the Client is in the waiting mode, then it will receive the response.
 - If the Proxy forwards the message to the Server, then it will receive the response from the server. 
 - If the Mule is delivering the message, hence it has the message.
+
+  <picture>
+    <source media="(prefers-color-scheme: dark)"srcset="https://github.com/R0mb0/Not_made_by_AI/blob/main/Badge/SVG/NotMadeByAIDark.svg">
+    <source media="(prefers-color-scheme: light)"srcset="https://github.com/R0mb0/Not_made_by_AI/blob/main/Badge/SVG/NotMadeByAILight.svg">
+    <img alt="Not made by AI" src="https://github.com/R0mb0/Not_made_by_AI/blob/main/Badge/SVG/NotMadeByAIDefault.svg">
+  </picture>
