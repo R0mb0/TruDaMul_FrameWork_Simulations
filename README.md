@@ -178,6 +178,32 @@ The aim is to provide a very base working implementation of the framework from w
 - If the Proxy forwards the message to the Server, then it will receive the response from the server. 
 - If the Mule is delivering the message, hence it has the message.
 
+<details>
+  <summary>
+
+  ## 👉 Click here to read the report 👈
+   
+  </summary>
+
+![1.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/1.png)
+![2.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/2.png)
+![3.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/3.png)
+![4.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/4.png)
+![5.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/5.png)
+![6.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/6.png)
+![7.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/7.png)
+![8.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/8.png)
+![9.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/9.png)
+![10.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/10.png)
+![11.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/11.png)
+![12.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/12.png)
+![13.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/13.png)
+![14.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/14.png)
+![15.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/15.png)
+![16.png](https://github.com/R0mb0/TruDaMul_FrameWork_Simulations/blob/main/ReadMe_Images/16.png)
+   
+</details>
+
   <picture>
     <source media="(prefers-color-scheme: dark)"srcset="https://github.com/R0mb0/Not_made_by_AI/blob/main/Badge/SVG/NotMadeByAIDark.svg">
     <source media="(prefers-color-scheme: light)"srcset="https://github.com/R0mb0/Not_made_by_AI/blob/main/Badge/SVG/NotMadeByAILight.svg">
